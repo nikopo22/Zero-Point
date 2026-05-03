@@ -20,7 +20,6 @@ public class LevelManager
             case 1:
                 CurrentLevel = new Level1();
                 break;
-
             default:
                 CurrentLevel = new Level1();
                 break;
@@ -32,10 +31,9 @@ public class LevelManager
 
     public void NextLevel()
     {
-        if (CurrentLevelNumber < 3) 
+        if (CurrentLevelNumber < 3)  // переход на следующие уровни
         {
             LoadLevel(CurrentLevelNumber + 1);
         }
-        // else - экран победы
     }
 }

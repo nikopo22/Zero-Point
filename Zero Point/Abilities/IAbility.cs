@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Xna.Framework;
 
-namespace ZeroPoint.Abilities
+namespace ZeroPoint.Abilities;
+
+public interface IAbility
 {
-    internal interface IAbility
-    {
-    }
+    string Name { get; }
+    //активна ли способность сейчас
+    bool IsActive { get; set; }
+    //время действия в сек
+    float Duration { get; set; }
+    //таймер обратного отсчёта
+    float CurrentTime { get; set; }
+
+    void Activate();
+    void Deactivate();
+    void Update(GameTime gameTime);
 }

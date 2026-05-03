@@ -22,4 +22,7 @@ public static class Constants
     // размеры шипов
     public const int SPIKE_WIDTH = 32;
     public const int SPIKE_HEIGHT = 32;
+
+    // радиус сканирования скрытых платформ
+    public const float SCAN_RADIUS = 300f;   
 }
