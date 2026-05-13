@@ -1,24 +1,29 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
 using ZeroPoint.Core;
 using ZeroPoint.Entities;
 using ZeroPoint.Managers;
+using ZeroPoint.States;
 using ZeroPoint.Utils;
 
 namespace ZeroPoint;
 
 public class Game1 : Game
 {
-    private GraphicsDeviceManager _graphics;  
-    private SpriteBatch _spriteBatch;         
-    private Texture2D _pixelTexture;          
+    private GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch;
+    private Texture2D _pixelTexture;
 
+    private Player _player;
+    private Camera _camera;
+    private LevelManager _levelManager;
 
-    private Player _player;                  
-    private Camera _camera;                   
-    private LevelManager _levelManager;    
+    private GameState _currentState;
+    private MenuState _menuState;
+    private PauseMenuState _pauseMenuState;
+
+    private KeyboardState _previousKeyboardState;
 
     public Game1()
     {
@@ -35,7 +40,7 @@ public class Game1 : Game
     {
         _camera = new Camera();
         _levelManager = new LevelManager();
-        _player = new Player(_levelManager.CurrentLevel.PlayerStartPosition);
+        _currentState = GameState.Menu;
 
         base.Initialize();
     }
@@ -44,72 +49,138 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // создаём текстуру 1x1 белый пиксель
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
+
+        _menuState = new MenuState(GraphicsDevice);
+        _pauseMenuState = new PauseMenuState(GraphicsDevice);
+        _player = new Player(_levelManager.CurrentLevel.PlayerStartPosition);
     }
 
     protected override void Update(GameTime gameTime)
     {
         var keyboardState = Keyboard.GetState();
 
-        // выход
-        if (keyboardState.IsKeyDown(Keys.Escape))
-            Exit();
-
-        _player.Update(gameTime, keyboardState,
-            _levelManager.CurrentLevel.MetalSurfaces,
-            _levelManager.CurrentLevel.HiddenPlatforms);
-
-        //столкновения с платформами
-        var allSolidObjects = new List<Platform>();
-
-        //обычные платформы
-        allSolidObjects.AddRange(_levelManager.CurrentLevel.Platforms);
-
-        //металлические поверхности как платформы 
-        foreach (var metal in _levelManager.CurrentLevel.MetalSurfaces)
+        //эскейп
+        if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
         {
-            allSolidObjects.Add(new Platform(
-                metal.Bounds.X,
-                metal.Bounds.Y,
-                metal.Bounds.Width,
-                metal.Bounds.Height
-            ));
+            if (_currentState == GameState.Playing)
+            {
+                _currentState = GameState.Pause;  
+            }
+            else if (_currentState == GameState.Pause)
+            {
+                _currentState = GameState.Playing; 
+            }
+            else if (_currentState == GameState.Menu)
+            {
+                Exit();  
+            }
         }
 
-        //коллизии
-        CollisionManager.HandleCollisions(_player, allSolidObjects);
-
-        //столкновение с шипами
-        if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
+        //меню
+        if (_currentState == GameState.Menu)
         {
-            _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            _menuState.Update(out bool playClicked, out bool exitClicked);
+
+            if (playClicked)
+            {
+                _currentState = GameState.Playing;
+                _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            }
+
+            if (exitClicked)
+                Exit();
         }
 
-        //достижение выхода
-        if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
+        //пауза
+        else if (_currentState == GameState.Pause)
         {
-            _levelManager.NextLevel();
-            _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            _pauseMenuState.Update(out bool resumeClicked, out bool menuClicked, out bool exitClicked);
+
+            if (resumeClicked)
+            {
+                _currentState = GameState.Playing;  //континуит
+            }
+
+            if (menuClicked)
+            {
+                _currentState = GameState.Menu;  //в меню
+                _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            }
+
+            if (exitClicked)
+                Exit();
         }
 
-        _camera.Follow(_player);
+        //игра
+        else if (_currentState == GameState.Playing)
+        {
+            _player.Update(gameTime, keyboardState,
+                _levelManager.CurrentLevel.MetalSurfaces,
+                _levelManager.CurrentLevel.HiddenPlatforms);
 
+            var allSolids = new System.Collections.Generic.List<Platform>();
+            allSolids.AddRange(_levelManager.CurrentLevel.Platforms);
+
+            foreach (var metal in _levelManager.CurrentLevel.MetalSurfaces)
+            {
+                allSolids.Add(new Platform(metal.Bounds.X, metal.Bounds.Y, metal.Bounds.Width, metal.Bounds.Height));
+            }
+
+            CollisionManager.HandleCollisions(_player, allSolids);
+
+            if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
+                _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+
+            if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
+            {
+                _levelManager.NextLevel();
+                _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            }
+
+            _camera.Follow(_player);
+        }
+
+        _previousKeyboardState = keyboardState;
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(new Color(50, 50, 60));
+        if (_currentState == GameState.Menu)
+        {
+            _spriteBatch.Begin();
+            _menuState.Draw(_spriteBatch);
+            _spriteBatch.End();
+        }
+        else if (_currentState == GameState.Playing)
+        {
+            GraphicsDevice.Clear(new Color(50, 50, 60));
 
-        _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
-        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+            _player.Draw(_spriteBatch, _pixelTexture);
 
-        _player.Draw(_spriteBatch, _pixelTexture);
+            _spriteBatch.End();
+        }
+        else if (_currentState == GameState.Pause)
+        {
+            GraphicsDevice.Clear(new Color(50, 50, 60));
 
-        _spriteBatch.End();
+            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+
+            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+            _player.Draw(_spriteBatch, _pixelTexture);
+
+            _spriteBatch.End();
+
+            //меню паузы
+            _spriteBatch.Begin();
+            _pauseMenuState.Draw(_spriteBatch);
+            _spriteBatch.End();
+        }
 
         base.Draw(gameTime);
     }
