@@ -1,24 +1,30 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
 using ZeroPoint.Core;
 using ZeroPoint.Entities;
 using ZeroPoint.Managers;
+using ZeroPoint.States;
 using ZeroPoint.Utils;
 
 namespace ZeroPoint;
 
 public class Game1 : Game
 {
-    private GraphicsDeviceManager _graphics;  
-    private SpriteBatch _spriteBatch;         
-    private Texture2D _pixelTexture;          
+    private GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch;
+    private Texture2D _pixelTexture;
 
+    private Player _player;
+    private Camera _camera;
+    private LevelManager _levelManager;
 
-    private Player _player;                  
-    private Camera _camera;                   
-    private LevelManager _levelManager;    
+    private GameState _currentState;
+    private MenuState _menuState;
+    private PauseMenuState _pauseMenuState;
+
+    private SpriteFont _font;
+    private KeyboardState _previousKeyboardState;
 
     public Game1()
     {
@@ -35,7 +41,7 @@ public class Game1 : Game
     {
         _camera = new Camera();
         _levelManager = new LevelManager();
-        _player = new Player(_levelManager.CurrentLevel.PlayerStartPosition);
+        _currentState = GameState.Menu;
 
         base.Initialize();
     }
@@ -44,50 +50,76 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        // создаём текстуру 1x1 белый пиксель
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
+
+        // Загружаем шрифт
+        _font = Content.Load<SpriteFont>("Fonts/PixelFont");
+
+        _menuState = new MenuState(GraphicsDevice, _font);
+        _pauseMenuState = new PauseMenuState(GraphicsDevice, _font);
+
+        _player = new Player(_levelManager.CurrentLevel.PlayerStartPosition);
     }
 
     protected override void Update(GameTime gameTime)
     {
         var keyboardState = Keyboard.GetState();
 
-        // выход
-        if (keyboardState.IsKeyDown(Keys.Escape))
-            Exit();
+        // Escape
+        if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
+        {
+            if (_currentState == GameState.Playing)
+                _currentState = GameState.Pause;
+            else if (_currentState == GameState.Pause)
+                _currentState = GameState.Playing;
+            else if (_currentState == GameState.Menu)
+                Exit();
+        }
 
+        switch (_currentState)
+        {
+            case GameState.Menu:
+                _menuState.Update(out bool playClicked, out bool exitClicked);
+                if (playClicked) { _currentState = GameState.Playing; _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition); }
+                if (exitClicked) Exit();
+                break;
+
+            case GameState.Playing:
+                UpdatePlaying(gameTime, keyboardState);
+                break;
+
+            case GameState.Pause:
+                _pauseMenuState.Update(out bool resumeClicked, out bool menuClicked, out bool exitClicked2);
+                if (resumeClicked) _currentState = GameState.Playing;
+                if (menuClicked) { _currentState = GameState.Menu; _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition); }
+                if (exitClicked2) Exit();
+                break;
+        }
+
+        _previousKeyboardState = keyboardState;
+        base.Update(gameTime);
+    }
+
+    private void UpdatePlaying(GameTime gameTime, KeyboardState keyboardState)
+    {
         _player.Update(gameTime, keyboardState,
             _levelManager.CurrentLevel.MetalSurfaces,
             _levelManager.CurrentLevel.HiddenPlatforms);
 
-        //столкновения с платформами
-        var allSolidObjects = new List<Platform>();
+        var allSolids = new System.Collections.Generic.List<Platform>();
+        allSolids.AddRange(_levelManager.CurrentLevel.Platforms);
 
-        //обычные платформы
-        allSolidObjects.AddRange(_levelManager.CurrentLevel.Platforms);
-
-        //металлические поверхности как платформы 
         foreach (var metal in _levelManager.CurrentLevel.MetalSurfaces)
         {
-            allSolidObjects.Add(new Platform(
-                metal.Bounds.X,
-                metal.Bounds.Y,
-                metal.Bounds.Width,
-                metal.Bounds.Height
-            ));
+            allSolids.Add(new Platform(metal.Bounds.X, metal.Bounds.Y, metal.Bounds.Width, metal.Bounds.Height));
         }
 
-        //коллизии
-        CollisionManager.HandleCollisions(_player, allSolidObjects);
+        CollisionManager.HandleCollisions(_player, allSolids);
 
-        //столкновение с шипами
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
-        {
             _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
-        }
 
-        //достижение выхода
         if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
         {
             _levelManager.NextLevel();
@@ -95,21 +127,36 @@ public class Game1 : Game
         }
 
         _camera.Follow(_player);
-
-        base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(new Color(50, 50, 60));
+        if (_currentState == GameState.Menu)
+        {
+            _spriteBatch.Begin();
+            _menuState.Draw(_spriteBatch);
+            _spriteBatch.End();
+        }
+        else if (_currentState == GameState.Playing)
+        {
+            GraphicsDevice.Clear(new Color(50, 50, 60));
+            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+            _player.Draw(_spriteBatch, _pixelTexture);
+            _spriteBatch.End();
+        }
+        else if (_currentState == GameState.Pause)
+        {
+            GraphicsDevice.Clear(new Color(50, 50, 60));
+            _spriteBatch.Begin(transformMatrix: _camera.Transform);
+            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+            _player.Draw(_spriteBatch, _pixelTexture);
+            _spriteBatch.End();
 
-        _spriteBatch.Begin(transformMatrix: _camera.Transform);
-
-        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
-
-        _player.Draw(_spriteBatch, _pixelTexture);
-
-        _spriteBatch.End();
+            _spriteBatch.Begin();
+            _pauseMenuState.Draw(_spriteBatch);
+            _spriteBatch.End();
+        }
 
         base.Draw(gameTime);
     }

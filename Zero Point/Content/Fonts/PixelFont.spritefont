@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
+	<Asset Type="Graphics:FontDescription">
+
+		<!-- Указываем ИМЯ ФАЙЛА .ttf (не название шрифта, а имя файла!) -->
+		<FontName>EpilepsySansBold.ttf</FontName>
+
+		<Size>24</Size>
+		<Spacing>1</Spacing>
+		<Style>Regular</Style>
+
+		<!-- Диапазоны символов: латиница + кириллица -->
+		<CharacterRegions>
+			<!-- Английские буквы, цифры, знаки -->
+			<CharacterRegion>
+				<Start>&#32;</Start>
+				<End>&#126;</End>
+			</CharacterRegion>
+
+			<!-- Русские буквы от А до я -->
+			<CharacterRegion>
+				<Start>&#1040;</Start>
+				<End>&#1103;</End>
+			</CharacterRegion>
+
+			<!-- Буква Ёё -->
+			<CharacterRegion>
+				<Start>&#1025;</Start>
+				<End>&#1105;</End>
+			</CharacterRegion>
+		</CharacterRegions>
+
+	</Asset>
+</XnaContent>

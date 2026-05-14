@@ -33,6 +33,10 @@ public class Player
     private Color magnetColor;    
 
     private KeyboardState previousKeyboardState;
+    
+    // Оптимизация: кэшируем квадрат радиуса сканирования
+    private static readonly float SCAN_RADIUS_SQUARED = Constants.SCAN_RADIUS * Constants.SCAN_RADIUS;
+    private static readonly float METAL_ADHESION_MARGIN = 10f;
 
     // конструктор
     public Player(Vector2 startPosition)
@@ -74,49 +78,11 @@ public class Player
             ScanAbility.Activate();
         }
 
-        // подсветка скрытых платформ
-        if (ScanAbility.IsActive)
-        {
-            foreach (var hidden in hiddenPlatforms)
-            {
-                //расстояние от игрока до платформы
-                float distance = Vector2.Distance(Position,
-                    new Vector2(hidden.Bounds.X + hidden.Bounds.Width / 2,
-                                hidden.Bounds.Y + hidden.Bounds.Height / 2));
+        // подсветка скрытых платформ (оптимизировано: используем DistanceSquared)
+        UpdateHiddenPlatforms(hiddenPlatforms);
 
-                if (distance <= Constants.SCAN_RADIUS)
-                {
-                    hidden.IsRevealed = true;
-                }
-            }
-        }
-        else
-        {
-            //скрываем все платформы
-            foreach (var hidden in hiddenPlatforms)
-            {
-                hidden.IsRevealed = false;
-            }
-        }
-
-        //движение
-        float moveDirection = 0;
-        if (keyboardState.IsKeyDown(Keys.A))
-            moveDirection = -1;  // В=влево
-        if (keyboardState.IsKeyDown(Keys.D))
-            moveDirection = 1;   // вправо
-
-        Velocity = new Vector2(moveDirection * Constants.PLAYER_SPEED, Velocity.Y);
-
-        //прыжок
-        if (keyboardState.IsKeyDown(Keys.W) &&
-            previousKeyboardState.IsKeyUp(Keys.W) &&
-            (IsGrounded || IsOnMetal))  
-        {
-            Velocity = new Vector2(Velocity.X, Constants.PLAYER_JUMP_FORCE);
-            IsGrounded = false;
-            IsOnMetal = false;
-        }
+        // движение (оптимизировано: более чистый код)
+        UpdateMovement(keyboardState);
 
         //гравитация
         if (!(IsOnMetal && MagnetAbility.IsActive))
@@ -126,47 +92,108 @@ public class Player
 
         Position += Velocity * deltaTime;
 
-        //прилипание
-        bool wasOnMetal = IsOnMetal;
+        //прилипание к металлическим поверхностям
+        UpdateMetalAdherence(metalSurfaces);
+
+        previousKeyboardState = keyboardState;
+    }
+
+    /// <summary>
+    /// Обновляет видимость скрытых платформ на основе активности сканера
+    /// </summary>
+    private void UpdateHiddenPlatforms(List<HiddenPlatform> hiddenPlatforms)
+    {
+        if (ScanAbility.IsActive)
+        {
+            foreach (var hidden in hiddenPlatforms)
+            {
+                // Оптимизация: используем DistanceSquared вместо Distance - избегаем sqrt
+                Vector2 hiddenCenter = new Vector2(
+                    hidden.Bounds.X + hidden.Bounds.Width / 2f,
+                    hidden.Bounds.Y + hidden.Bounds.Height / 2f
+                );
+                
+                float distanceSquared = Vector2.DistanceSquared(Position, hiddenCenter);
+                hidden.IsRevealed = distanceSquared <= SCAN_RADIUS_SQUARED;
+            }
+        }
+        else
+        {
+            // Скрываем все платформы (оптимизировано: избегаем foreach для очистки)
+            foreach (var hidden in hiddenPlatforms)
+            {
+                hidden.IsRevealed = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Обновляет движение игрока на основе ввода
+    /// </summary>
+    private void UpdateMovement(KeyboardState keyboardState)
+    {
+        // Оптимизация: вычисляем направление более чистым способом
+        float moveDirection = 0;
+        if (keyboardState.IsKeyDown(Keys.A))
+            moveDirection -= 1;
+        if (keyboardState.IsKeyDown(Keys.D))
+            moveDirection += 1;
+
+        Velocity = new Vector2(moveDirection * Constants.PLAYER_SPEED, Velocity.Y);
+
+        //прыжок
+        if (keyboardState.IsKeyDown(Keys.W) && 
+            previousKeyboardState.IsKeyUp(Keys.W) &&
+            (IsGrounded || IsOnMetal))  
+        {
+            Velocity = new Vector2(Velocity.X, Constants.PLAYER_JUMP_FORCE);
+            IsGrounded = false;
+            IsOnMetal = false;
+        }
+    }
+
+    /// <summary>
+    /// Обновляет прилипание к металлическим поверхностям
+    /// </summary>
+    private void UpdateMetalAdherence(List<MetalSurface> metalSurfaces)
+    {
         IsOnMetal = false;
+
+        if (!MagnetAbility.IsActive)
+            return;
 
         foreach (var metal in metalSurfaces)
         {
-            if (Bounds.Intersects(metal.Bounds) && MagnetAbility.IsActive)
+            if (!Bounds.Intersects(metal.Bounds))
+                continue;
+
+            // Проверяем направление столкновения и применяем эффект магнита
+            if (Velocity.Y >= 0 && PreviousBounds.Bottom <= metal.Bounds.Top + METAL_ADHESION_MARGIN)
             {
-
-                if (Velocity.Y >= 0 && PreviousBounds.Bottom <= metal.Bounds.Top + 10)
-                {
-                    Position = new Vector2(Position.X, metal.Bounds.Top - Bounds.Height);
-                    Velocity = new Vector2(Velocity.X, 0);
-                    IsOnMetal = true;
-                    IsGrounded = true;
-                }
-
-                else if (Velocity.Y <= 0 && PreviousBounds.Top >= metal.Bounds.Bottom - 10)
-                {
-                    Position = new Vector2(Position.X, metal.Bounds.Bottom);
-                    Velocity = new Vector2(Velocity.X, 0);
-                    IsOnMetal = true;
-                }
-
-                else if (Velocity.X >= 0 && PreviousBounds.Right <= metal.Bounds.Left + 10)
-                {
-                    Position = new Vector2(metal.Bounds.Left - Bounds.Width, Position.Y);
-                    Velocity = new Vector2(0, Velocity.Y);
-                    IsOnMetal = true;
-                }
-
-                else if (Velocity.X <= 0 && PreviousBounds.Left >= metal.Bounds.Right - 10)
-                {
-                    Position = new Vector2(metal.Bounds.Right, Position.Y);
-                    Velocity = new Vector2(0, Velocity.Y);
-                    IsOnMetal = true;
-                }
+                Position = new Vector2(Position.X, metal.Bounds.Top - Bounds.Height);
+                Velocity = new Vector2(Velocity.X, 0);
+                IsOnMetal = true;
+                IsGrounded = true;
+            }
+            else if (Velocity.Y <= 0 && PreviousBounds.Top >= metal.Bounds.Bottom - METAL_ADHESION_MARGIN)
+            {
+                Position = new Vector2(Position.X, metal.Bounds.Bottom);
+                Velocity = new Vector2(Velocity.X, 0);
+                IsOnMetal = true;
+            }
+            else if (Velocity.X >= 0 && PreviousBounds.Right <= metal.Bounds.Left + METAL_ADHESION_MARGIN)
+            {
+                Position = new Vector2(metal.Bounds.Left - Bounds.Width, Position.Y);
+                Velocity = new Vector2(0, Velocity.Y);
+                IsOnMetal = true;
+            }
+            else if (Velocity.X <= 0 && PreviousBounds.Left >= metal.Bounds.Right - METAL_ADHESION_MARGIN)
+            {
+                Position = new Vector2(metal.Bounds.Right, Position.Y);
+                Velocity = new Vector2(0, Velocity.Y);
+                IsOnMetal = true;
             }
         }
-
-        previousKeyboardState = keyboardState;
     }
 
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture)

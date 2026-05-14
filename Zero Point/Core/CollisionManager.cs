@@ -12,56 +12,90 @@ public static class CollisionManager
         return rect1.Intersects(rect2); 
     }
 
+    //столкновения игрока с платформами и металлическими поверхностями
+    public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces)
+    {
+        player.IsGrounded = false;
+
+        // Проверяем обычные платформы
+        CheckPlatformCollisions(player, platforms);
+        
+        // Проверяем металлические поверхности
+        CheckMetalSurfaceCollisions(player, metalSurfaces);
+    }
 
     //столкновения игрока с платформами
     public static void HandleCollisions(Player player, List<Platform> platforms)
     {
         player.IsGrounded = false;
+        CheckPlatformCollisions(player, platforms);
+    }
 
+    private static void CheckPlatformCollisions(Player player, List<Platform> platforms)
+    {
         foreach (var platform in platforms)
         {
             if (CheckCollision(player.Bounds, platform.Bounds))
             {
-                //приземление        
-                if (player.Velocity.Y > 0 && player.PreviousBounds.Bottom <= platform.Bounds.Top + 5)
-                {
-                    player.Position = new Vector2(
-                        player.Position.X,
-                        platform.Bounds.Top - player.Bounds.Height
-                    );
-                    //останавливаем падение
-                    player.Velocity = new Vector2(player.Velocity.X, 0);
-                    player.IsGrounded = true;      // игрок на земле
-                }
-                //снизу
-                else if (player.Velocity.Y < 0 && player.PreviousBounds.Top >= platform.Bounds.Bottom - 5)
-                {
-                    player.Position = new Vector2(
-                        player.Position.X,
-                        platform.Bounds.Bottom
-                    );
-                    player.Velocity = new Vector2(player.Velocity.X, 0);
-                }
-                //влево вправо
-                else
-                {
-                    //с левой стороны
-                    if (player.PreviousBounds.Right <= platform.Bounds.Left + 5)
-                    {
-                        player.Position = new Vector2(
-                            platform.Bounds.Left - player.Bounds.Width,
-                            player.Position.Y
-                        );
-                    }
-                    //с правой стороны
-                    else if (player.PreviousBounds.Left >= platform.Bounds.Right - 5)
-                    {
-                        player.Position = new Vector2(
-                            platform.Bounds.Right,
-                            player.Position.Y
-                        );
-                    }
-                }
+                ResolveCollision(player, platform.Bounds);
+            }
+        }
+    }
+
+    private static void CheckMetalSurfaceCollisions(Player player, List<MetalSurface> metalSurfaces)
+    {
+        foreach (var metal in metalSurfaces)
+        {
+            if (CheckCollision(player.Bounds, metal.Bounds))
+            {
+                ResolveCollision(player, metal.Bounds);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Решает коллизию между игроком и поверхностью
+    /// </summary>
+    private static void ResolveCollision(Player player, Rectangle platformBounds)
+    {
+        //приземление        
+        if (player.Velocity.Y > 0 && player.PreviousBounds.Bottom <= platformBounds.Top + 5)
+        {
+            player.Position = new Vector2(
+                player.Position.X,
+                platformBounds.Top - player.Bounds.Height
+            );
+            //останавливаем падение
+            player.Velocity = new Vector2(player.Velocity.X, 0);
+            player.IsGrounded = true;      // игрок на земле
+        }
+        //снизу
+        else if (player.Velocity.Y < 0 && player.PreviousBounds.Top >= platformBounds.Bottom - 5)
+        {
+            player.Position = new Vector2(
+                player.Position.X,
+                platformBounds.Bottom
+            );
+            player.Velocity = new Vector2(player.Velocity.X, 0);
+        }
+        //влево вправо
+        else
+        {
+            //с левой стороны
+            if (player.PreviousBounds.Right <= platformBounds.Left + 5)
+            {
+                player.Position = new Vector2(
+                    platformBounds.Left - player.Bounds.Width,
+                    player.Position.Y
+                );
+            }
+            //с правой стороны
+            else if (player.PreviousBounds.Left >= platformBounds.Right - 5)
+            {
+                player.Position = new Vector2(
+                    platformBounds.Right,
+                    player.Position.Y
+                );
             }
         }
     }

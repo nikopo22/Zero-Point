@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run ZeroPoint",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Zero Point/bin/Debug/net8.0/ZeroPoint.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Zero Point",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "requireExactSource": false
+        }
+    ]
+}
