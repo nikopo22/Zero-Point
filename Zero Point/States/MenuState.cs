@@ -1,20 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using ZeroPoint.UI;
 
 namespace ZeroPoint.States;
 
 public class MenuState
 {
-    private Rectangle playButton;
-    private Rectangle exitButton;
-    private Texture2D pixelTexture;
+    private readonly Button playButton;
+    private readonly Button exitButton;
+    private readonly Texture2D pixelTexture;
     private MouseState previousMouseState;
-    private Color playColor;
-    private Color exitColor;
-    private Color normalColor;
-    private Color hoverColor;
-    private SpriteFont font;
+    private readonly SpriteFont font;
 
     public MenuState(GraphicsDevice graphicsDevice, SpriteFont font)
     {
@@ -27,45 +24,21 @@ public class MenuState
         int buttonHeight = 60;
         int centerX = 1280 / 2 - buttonWidth / 2;
 
-        playButton = new Rectangle(centerX, 320, buttonWidth, buttonHeight);
-        exitButton = new Rectangle(centerX, 420, buttonWidth, buttonHeight);
+        playButton = new Button(new Rectangle(centerX, 320, buttonWidth, buttonHeight), "ИГРАТЬ", font);
+        exitButton = new Button(new Rectangle(centerX, 420, buttonWidth, buttonHeight), "ВЫХОД", font);
 
-        normalColor = new Color(70, 70, 130);
-        hoverColor = new Color(120, 120, 200);
-        playColor = normalColor;
-        exitColor = normalColor;
         previousMouseState = Mouse.GetState();
     }
 
     public void Update(out bool playClicked, out bool exitClicked)
     {
         MouseState current = Mouse.GetState();
-        int mx = current.X, my = current.Y;
 
-        playClicked = false;
-        exitClicked = false;
+        playButton.Update(current);
+        exitButton.Update(current);
 
-        if (playButton.Contains(mx, my))
-        {
-            playColor = hoverColor;
-            if (current.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
-                playClicked = true;
-        }
-        else
-        {
-            playColor = normalColor;
-        }
-
-        if (exitButton.Contains(mx, my))
-        {
-            exitColor = hoverColor;
-            if (current.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
-                exitClicked = true;
-        }
-        else
-        {
-            exitColor = normalColor;
-        }
+        playClicked = playButton.WasReleased(current, previousMouseState);
+        exitClicked = exitButton.WasReleased(current, previousMouseState);
 
         previousMouseState = current;
     }
@@ -78,19 +51,7 @@ public class MenuState
         Vector2 titleSize = font.MeasureString(title);
         spriteBatch.DrawString(font, title, new Vector2(1280 / 2 - titleSize.X / 2, 100), new Color(220, 180, 255));
 
-        DrawButton(spriteBatch, playButton, playColor, "ИГРАТЬ");
-        DrawButton(spriteBatch, exitButton, exitColor, "ВЫХОД");
-    }
-
-    private void DrawButton(SpriteBatch spriteBatch, Rectangle button, Color fillColor, string text)
-    {
-        spriteBatch.Draw(pixelTexture, button, fillColor);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y, button.Width, 2), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y + button.Height - 2, button.Width, 2), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y, 2, button.Height), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X + button.Width - 2, button.Y, 2, button.Height), Color.White);
-
-        Vector2 textSize = font.MeasureString(text);
-        spriteBatch.DrawString(font, text, new Vector2(button.X + (button.Width - textSize.X) / 2, button.Y + (button.Height - textSize.Y) / 2), Color.White);
+        playButton.Draw(spriteBatch, pixelTexture);
+        exitButton.Draw(spriteBatch, pixelTexture);
     }
 }

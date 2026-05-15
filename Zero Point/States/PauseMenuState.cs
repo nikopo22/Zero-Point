@@ -1,23 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using ZeroPoint.UI;
 
 namespace ZeroPoint.States;
 
 public class PauseMenuState
 {
-    private Rectangle resumeButton;
-    private Rectangle menuButton;
-    private Rectangle exitButton;
-    private Texture2D pixelTexture;
+    private readonly Button resumeButton;
+    private readonly Button menuButton;
+    private readonly Button exitButton;
+    private readonly Texture2D pixelTexture;
     private MouseState previousMouseState;
-    private Color resumeColor;
-    private Color menuColor;
-    private Color exitColor;
-    private Color normalColor;
-    private Color hoverColor;
-    private Color overlayColor;
-    private SpriteFont font;
+    private readonly SpriteFont font;
+    private readonly Color overlayColor;
 
     public PauseMenuState(GraphicsDevice graphicsDevice, SpriteFont font)
     {
@@ -31,61 +27,25 @@ public class PauseMenuState
         int startY = 320;
         int spacing = 70;
 
-        resumeButton = new Rectangle(centerX, startY, btnW, btnH);
-        menuButton = new Rectangle(centerX, startY + spacing, btnW, btnH);
-        exitButton = new Rectangle(centerX, startY + spacing * 2, btnW, btnH);
+        resumeButton = new Button(new Rectangle(centerX, startY, btnW, btnH), "ПРОДОЛЖИТЬ", font);
+        menuButton = new Button(new Rectangle(centerX, startY + spacing, btnW, btnH), "ГЛАВНОЕ МЕНЮ", font);
+        exitButton = new Button(new Rectangle(centerX, startY + spacing * 2, btnW, btnH), "ВЫХОД", font);
 
-        normalColor = new Color(70, 70, 130);
-        hoverColor = new Color(120, 120, 200);
         overlayColor = new Color(0, 0, 0, 180);
-
-        resumeColor = normalColor;
-        menuColor = normalColor;
-        exitColor = normalColor;
         previousMouseState = Mouse.GetState();
     }
 
     public void Update(out bool resumeClicked, out bool menuClicked, out bool exitClicked)
     {
         MouseState current = Mouse.GetState();
-        int mx = current.X, my = current.Y;
 
-        resumeClicked = false;
-        menuClicked = false;
-        exitClicked = false;
+        resumeButton.Update(current);
+        menuButton.Update(current);
+        exitButton.Update(current);
 
-        if (resumeButton.Contains(mx, my))
-        {
-            resumeColor = hoverColor;
-            if (current.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
-                resumeClicked = true;
-        }
-        else
-        {
-            resumeColor = normalColor;
-        }
-
-        if (menuButton.Contains(mx, my))
-        {
-            menuColor = hoverColor;
-            if (current.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
-                menuClicked = true;
-        }
-        else
-        {
-            menuColor = normalColor;
-        }
-
-        if (exitButton.Contains(mx, my))
-        {
-            exitColor = hoverColor;
-            if (current.LeftButton == ButtonState.Released && previousMouseState.LeftButton == ButtonState.Pressed)
-                exitClicked = true;
-        }
-        else
-        {
-            exitColor = normalColor;
-        }
+        resumeClicked = resumeButton.WasReleased(current, previousMouseState);
+        menuClicked = menuButton.WasReleased(current, previousMouseState);
+        exitClicked = exitButton.WasReleased(current, previousMouseState);
 
         previousMouseState = current;
     }
@@ -111,20 +71,8 @@ public class PauseMenuState
 
         spriteBatch.Draw(pixelTexture, new Rectangle(menuX + 20, menuY + 90, menuWidth - 40, 2), new Color(100, 100, 150));
 
-        DrawButton(spriteBatch, resumeButton, resumeColor, "ПРОДОЛЖИТЬ");
-        DrawButton(spriteBatch, menuButton, menuColor, "ГЛАВНОЕ МЕНЮ");
-        DrawButton(spriteBatch, exitButton, exitColor, "ВЫХОД");
-    }
-
-    private void DrawButton(SpriteBatch spriteBatch, Rectangle button, Color fillColor, string text)
-    {
-        spriteBatch.Draw(pixelTexture, button, fillColor);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y, button.Width, 2), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y + button.Height - 2, button.Width, 2), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X, button.Y, 2, button.Height), Color.White);
-        spriteBatch.Draw(pixelTexture, new Rectangle(button.X + button.Width - 2, button.Y, 2, button.Height), Color.White);
-
-        Vector2 textSize = font.MeasureString(text);
-        spriteBatch.DrawString(font, text, new Vector2(button.X + (button.Width - textSize.X) / 2, button.Y + (button.Height - textSize.Y) / 2), Color.White);
+        resumeButton.Draw(spriteBatch, pixelTexture);
+        menuButton.Draw(spriteBatch, pixelTexture);
+        exitButton.Draw(spriteBatch, pixelTexture);
     }
 }

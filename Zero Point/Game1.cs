@@ -117,15 +117,10 @@ public class Game1 : Game
             _levelManager.CurrentLevel.MetalSurfaces,
             _levelManager.CurrentLevel.HiddenPlatforms);
 
-        var allSolids = new List<Platform>();
-        allSolids.AddRange(_levelManager.CurrentLevel.Platforms);
-
-        foreach (var metal in _levelManager.CurrentLevel.MetalSurfaces)
-        {
-            allSolids.Add(new Platform(metal.Bounds.X, metal.Bounds.Y, metal.Bounds.Width, metal.Bounds.Height));
-        }
-
-        CollisionManager.HandleCollisions(_player, allSolids);
+        CollisionManager.HandleCollisions(_player,
+            _levelManager.CurrentLevel.Platforms,
+            _levelManager.CurrentLevel.MetalSurfaces,
+            _levelManager.CurrentLevel.HiddenPlatforms);
 
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
             _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
@@ -149,19 +144,11 @@ public class Game1 : Game
         }
         else if (_currentState == GameState.Playing)
         {
-            GraphicsDevice.Clear(new Color(50, 50, 60));
-            _spriteBatch.Begin(transformMatrix: _camera.Transform);
-            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
-            _player.Draw(_spriteBatch, _pixelTexture);
-            _spriteBatch.End();
+            DrawGameplay();
         }
         else if (_currentState == GameState.Pause)
         {
-            GraphicsDevice.Clear(new Color(50, 50, 60));
-            _spriteBatch.Begin(transformMatrix: _camera.Transform);
-            _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
-            _player.Draw(_spriteBatch, _pixelTexture);
-            _spriteBatch.End();
+            DrawGameplay();
 
             _spriteBatch.Begin();
             _pauseMenuState.Draw(_spriteBatch);
@@ -169,5 +156,14 @@ public class Game1 : Game
         }
 
         base.Draw(gameTime);
+    }
+
+    private void DrawGameplay()
+    {
+        GraphicsDevice.Clear(new Color(50, 50, 60));
+        _spriteBatch.Begin(transformMatrix: _camera.Transform);
+        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+        _player.Draw(_spriteBatch, _pixelTexture);
+        _spriteBatch.End();
     }
 }

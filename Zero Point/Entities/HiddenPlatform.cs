@@ -21,13 +21,9 @@ public class HiddenPlatform
 
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture)
     {
-        if (IsRevealed)
-        {
-            spriteBatch.Draw(pixelTexture, Bounds, revealedColor);
-        }
-        else
-        {
-            spriteBatch.Draw(pixelTexture, Bounds, hiddenColor);
-        }
+        if (!IsRevealed)
+            return;
+
+        spriteBatch.Draw(pixelTexture, Bounds, revealedColor);
     }
 }

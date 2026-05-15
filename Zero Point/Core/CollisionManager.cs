@@ -24,13 +24,21 @@ public static class CollisionManager
         CheckMetalSurfaceCollisions(player, metalSurfaces);
     }
 
-    //столкновения игрока с платформами
-    public static void HandleCollisions(Player player, List<Platform> platforms)
+    public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms)
     {
         player.IsGrounded = false;
+
+        // Проверяем обычные платформы
         CheckPlatformCollisions(player, platforms);
+        
+        // Проверяем металлические поверхности
+        CheckMetalSurfaceCollisions(player, metalSurfaces);
+
+        // Проверяем скрытые платформы только когда они видимы
+        CheckHiddenPlatformCollisions(player, hiddenPlatforms);
     }
 
+    //столкновения игрока с платформами
     private static void CheckPlatformCollisions(Player player, List<Platform> platforms)
     {
         foreach (var platform in platforms)
@@ -49,6 +57,20 @@ public static class CollisionManager
             if (CheckCollision(player.Bounds, metal.Bounds))
             {
                 ResolveCollision(player, metal.Bounds);
+            }
+        }
+    }
+
+    private static void CheckHiddenPlatformCollisions(Player player, List<HiddenPlatform> hiddenPlatforms)
+    {
+        foreach (var hidden in hiddenPlatforms)
+        {
+            if (!hidden.IsRevealed)
+                continue;
+
+            if (CheckCollision(player.Bounds, hidden.Bounds))
+            {
+                ResolveCollision(player, hidden.Bounds);
             }
         }
     }
