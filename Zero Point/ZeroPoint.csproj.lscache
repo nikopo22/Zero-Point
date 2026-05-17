@@ -62,6 +62,7 @@ Abilities/
 Core/
  Camera.cs
  CollisionManager.cs
+ SpriteSheet.cs
 Entities/
  HiddenPlatform.cs
  MetalSurface.cs

@@ -15,7 +15,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private Texture2D _pixelTexture;
-    private Texture2D _playerTexture;
+    private SpriteSheet _playerSpriteSheet;
     private Texture2D _menuTexture;
     private Texture2D _blockTexture;
     private Texture2D _spikeTexture;
@@ -59,7 +59,15 @@ public class Game1 : Game
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
 
-        _playerTexture = Content.Load<Texture2D>("Robot/robot-spritesheet");
+        // Правильный путь к текстуре
+        Texture2D playerTexture = Content.Load<Texture2D>("Sprites/OrangeRobot_SpriteSheet");
+        System.Diagnostics.Debug.WriteLine($"Размер текстуры: {playerTexture.Width} x {playerTexture.Height}");
+
+        int frameWidth = 32;   // ← ИЗМЕНИ ПОСЛЕ ТОГО, КАК УЗНАЕШЬ РАЗМЕР
+        int frameHeight = 32;  // ← ИЗМЕНИ ПОСЛЕ ТОГО, КАК УЗНАЕШЬ РАЗМЕР
+
+        _playerSpriteSheet = new SpriteSheet(playerTexture, frameWidth, frameHeight);
+
         _menuTexture = Content.Load<Texture2D>("Menu/menu");
         _blockTexture = Content.Load<Texture2D>("Block/block");
         _spikeTexture = Content.Load<Texture2D>("Spike/spike");
@@ -76,9 +84,9 @@ public class Game1 : Game
             (Content.Load<Texture2D>("Backgrounds/5"), 0.75f),
         };
         _player = new Player(
-    _levelManager.CurrentLevel.PlayerStartPosition,
-    _playerTexture
-);
+            _levelManager.CurrentLevel.PlayerStartPosition,
+            _playerSpriteSheet
+        );
     }
 
     protected override void Update(GameTime gameTime)
@@ -216,7 +224,7 @@ public class Game1 : Game
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
         _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture);
-        _player.Draw(_spriteBatch, _pixelTexture);
+        _player.Draw(_spriteBatch);
 
         _spriteBatch.End();
     }   

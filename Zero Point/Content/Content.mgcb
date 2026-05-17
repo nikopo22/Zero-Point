@@ -54,12 +54,12 @@
 /processorParam:GenerateMipmaps=False
 /build:Backgrounds/5.png
 
-#begin Robot/robot-spritesheet.png
+#begin Sprites/OrangeRobot_SpriteSheet.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyEnabled=False
 /processorParam:GenerateMipmaps=False
-/build:Robot/robot-spritesheet.png
+/build:Sprites/OrangeRobot_SpriteSheet.png
 
 #begin Spike/spike.png
 /importer:TextureImporter
