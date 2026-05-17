@@ -9,6 +9,17 @@ namespace ZeroPoint.Entities;
 
 public class Player
 {
+    private Texture2D _texture;
+
+    private int _currentFrame = 0;
+    private float _animationTimer = 0f;
+
+    private const float FRAME_TIME = 0.1f;
+
+    private int _frameWidth = 30;
+    private int _frameHeight = 64;
+
+    private int _frameCount = 6;
     //св-ва
     public Vector2 Position { get; set; }      //координаты игрока
     public Vector2 Velocity { get; set; }      //скорость
@@ -39,8 +50,9 @@ public class Player
     private static readonly float METAL_ADHESION_MARGIN = 10f;
 
     // конструктор
-    public Player(Vector2 startPosition)
+    public Player(Vector2 startPosition, Texture2D texture)
     {
+        _texture = texture;
         Position = startPosition;
         Velocity = Vector2.Zero;
         IsGrounded = false;
@@ -83,7 +95,7 @@ public class Player
 
         // движение (оптимизировано: более чистый код)
         UpdateMovement(keyboardState);
-
+        Animate(gameTime);
         //гравитация
         if (!(IsOnMetal && MagnetAbility.IsActive))
         {
@@ -196,12 +208,25 @@ public class Player
         }
     }
 
+
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture)
     {
-        //магнит активен - рисуем голубым, иначе синим
-        Color drawColor = MagnetAbility.IsActive ? magnetColor : normalColor;
-        spriteBatch.Draw(pixelTexture, Bounds, drawColor);
+        Rectangle sourceRect = new Rectangle(
+            _currentFrame * _frameWidth,
+            0,
+            _frameWidth,
+            _frameHeight
+        );
+
+        spriteBatch.Draw(
+            _texture,
+            Position,
+            sourceRect,
+            Color.White
+        );
     }
+
+
 
     public void Reset(Vector2 respawnPosition)
     {
@@ -212,5 +237,19 @@ public class Player
 
         MagnetAbility.Deactivate();
         ScanAbility.Deactivate();
+    }
+
+    private void Animate(GameTime gameTime)
+    {
+        _animationTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (_animationTimer >= FRAME_TIME)
+        {
+            _currentFrame++;
+            _animationTimer = 0f;
+
+            if (_currentFrame >= _frameCount)
+                _currentFrame = 0;
+        }
     }
 }

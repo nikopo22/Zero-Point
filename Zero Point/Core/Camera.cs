@@ -11,6 +11,7 @@ public class Camera
 
     //текущая позиция камеры 
     private Vector2 position;
+    public Vector2 CameraPosition => position;
 
     // следит за игроком, центрируя его на экране
     public void Follow(Player player)

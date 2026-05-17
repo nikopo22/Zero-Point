@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using ZeroPoint.Core;
@@ -7,6 +6,7 @@ using ZeroPoint.Entities;
 using ZeroPoint.Managers;
 using ZeroPoint.States;
 using ZeroPoint.Utils;
+using System.Collections.Generic;
 
 namespace ZeroPoint;
 
@@ -15,6 +15,8 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private Texture2D _pixelTexture;
+    private Texture2D _playerTexture;
+    private List<(Texture2D texture, float speed)> _backgroundLayers;
 
     private Player _player;
     private Camera _camera;
@@ -41,7 +43,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _camera = new Camera();
-        _levelManager = new LevelManager();
+        _levelManager = new LevelManager(Content);
         _currentState = GameState.Menu;
 
         base.Initialize();
@@ -54,12 +56,23 @@ public class Game1 : Game
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
 
-        _font = Content.Load<SpriteFont>("Fonts/PixelFont");
+        _playerTexture = Content.Load<Texture2D>("Robot/robot-spritesheet");
 
+        _font = Content.Load<SpriteFont>("Fonts/PixelFont");
         _menuState = new MenuState(GraphicsDevice, _font);
         _pauseMenuState = new PauseMenuState(GraphicsDevice, _font);
-
-        _player = new Player(_levelManager.CurrentLevel.PlayerStartPosition);
+        _backgroundLayers = new List<(Texture2D, float)>
+        {
+            (Content.Load<Texture2D>("Backgrounds/1"), 0.0f),
+            (Content.Load<Texture2D>("Backgrounds/2"), 0.05f),
+            (Content.Load<Texture2D>("Backgrounds/3"), 0.2f),
+            (Content.Load<Texture2D>("Backgrounds/4"), 0.45f),
+            (Content.Load<Texture2D>("Backgrounds/5"), 0.75f),
+        };
+        _player = new Player(
+    _levelManager.CurrentLevel.PlayerStartPosition,
+    _playerTexture
+);
     }
 
     protected override void Update(GameTime gameTime)
@@ -136,34 +149,69 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        GraphicsDevice.Clear(_currentState == GameState.Menu ? new Color(25, 25, 40) : new Color(50, 50, 60));
+
         if (_currentState == GameState.Menu)
         {
             _spriteBatch.Begin();
             _menuState.Draw(_spriteBatch);
             _spriteBatch.End();
         }
-        else if (_currentState == GameState.Playing)
-        {
-            DrawGameplay();
-        }
-        else if (_currentState == GameState.Pause)
+        else
         {
             DrawGameplay();
 
-            _spriteBatch.Begin();
-            _pauseMenuState.Draw(_spriteBatch);
-            _spriteBatch.End();
+            if (_currentState == GameState.Pause)
+            {
+                _spriteBatch.Begin();
+                _pauseMenuState.Draw(_spriteBatch);
+                _spriteBatch.End();
+            }
         }
 
         base.Draw(gameTime);
     }
 
-    private void DrawGameplay()
+
+    private void DrawParallaxBackground()
     {
-        GraphicsDevice.Clear(new Color(50, 50, 60));
-        _spriteBatch.Begin(transformMatrix: _camera.Transform);
-        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
-        _player.Draw(_spriteBatch, _pixelTexture);
+        _spriteBatch.Begin();
+
+        foreach (var layer in _backgroundLayers)
+        {
+            float x = -_camera.CameraPosition.X * layer.speed;
+
+            int drawWidth = Constants.SCREEN_WIDTH;
+            int drawHeight = Constants.SCREEN_HEIGHT;
+
+            x %= drawWidth;
+
+            _spriteBatch.Draw(
+                layer.texture,
+                new Rectangle((int)x, 0, drawWidth, drawHeight),
+                Color.White);
+
+            // второй фон для бесшовности
+            _spriteBatch.Draw(
+                layer.texture,
+                new Rectangle((int)x + drawWidth, 0, drawWidth, drawHeight),
+                Color.White);
+        }
+
         _spriteBatch.End();
     }
+
+    private void DrawGameplay()
+    {
+        GraphicsDevice.Clear(new Color(20, 20, 30));
+
+        DrawParallaxBackground();
+
+        _spriteBatch.Begin(transformMatrix: _camera.Transform);
+
+        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+        _player.Draw(_spriteBatch, _pixelTexture);
+
+        _spriteBatch.End();
+    }   
 }

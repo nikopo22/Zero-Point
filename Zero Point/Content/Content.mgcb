@@ -19,3 +19,44 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/PixelFont.spritefont
 
+#begin Backgrounds/1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Backgrounds/1.png
+
+#begin Backgrounds/2.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Backgrounds/2.png
+
+#begin Backgrounds/3.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Backgrounds/3.png
+
+#begin Backgrounds/4.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Backgrounds/4.png
+
+#begin Backgrounds/5.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Backgrounds/5.png
+
+#begin Robot/robot-spritesheet.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Robot/robot-spritesheet.png
