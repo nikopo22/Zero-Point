@@ -16,6 +16,9 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private Texture2D _pixelTexture;
     private Texture2D _playerTexture;
+    private Texture2D _menuTexture;
+    private Texture2D _blockTexture;
+    private Texture2D _spikeTexture;
     private List<(Texture2D texture, float speed)> _backgroundLayers;
 
     private Player _player;
@@ -57,9 +60,12 @@ public class Game1 : Game
         _pixelTexture.SetData(new[] { Color.White });
 
         _playerTexture = Content.Load<Texture2D>("Robot/robot-spritesheet");
+        _menuTexture = Content.Load<Texture2D>("Menu/menu");
+        _blockTexture = Content.Load<Texture2D>("Block/block");
+        _spikeTexture = Content.Load<Texture2D>("Spike/spike");
 
         _font = Content.Load<SpriteFont>("Fonts/PixelFont");
-        _menuState = new MenuState(GraphicsDevice, _font);
+        _menuState = new MenuState(GraphicsDevice, _font, _menuTexture);
         _pauseMenuState = new PauseMenuState(GraphicsDevice, _font);
         _backgroundLayers = new List<(Texture2D, float)>
         {
@@ -209,7 +215,7 @@ public class Game1 : Game
 
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
-        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture);
+        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture);
         _player.Draw(_spriteBatch, _pixelTexture);
 
         _spriteBatch.End();

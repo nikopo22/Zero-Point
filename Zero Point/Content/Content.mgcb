@@ -60,3 +60,24 @@
 /processorParam:ColorKeyEnabled=False
 /processorParam:GenerateMipmaps=False
 /build:Robot/robot-spritesheet.png
+
+#begin Spike/spike.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Spike/spike.png
+
+#begin Block/block.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Block/block.jpg
+
+#begin Menu/menu.jpg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:Menu/menu.jpg

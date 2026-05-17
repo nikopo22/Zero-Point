@@ -83,7 +83,7 @@ public class Level1
     {
 
         // пол
-        Platforms.Add(new Platform(0, 650, 2000, 20));
+        Platforms.Add(new Platform(0, 700, 2000, 20));
         // стартовая платформа
         Platforms.Add(new Platform(100, 550, 100, 20));
         // платформа для прыжка
@@ -113,7 +113,7 @@ public class Level1
         ExitDoor = new Rectangle(850, 600, 40, 50);
     }
 
-    public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture)
+    public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture)
     {
         if (tmx != null && tileset != null)
         {
@@ -133,18 +133,18 @@ public class Level1
             else
             {
                 foreach (var platform in Platforms)
-                    platform.Draw(spriteBatch, pixelTexture);
+                    platform.Draw(spriteBatch, blockTexture);
 
                 foreach (var metal in MetalSurfaces)
-                    metal.Draw(spriteBatch, pixelTexture);
+                    metal.Draw(spriteBatch, blockTexture);
             }
 
             // Рисуем скрытые платформы и шипы
             foreach (var hidden in HiddenPlatforms)
-                hidden.Draw(spriteBatch, pixelTexture);
+                hidden.Draw(spriteBatch, blockTexture);
 
             foreach (var spike in Spikes)
-                spike.Draw(spriteBatch, pixelTexture);
+                spike.Draw(spriteBatch, spikeTexture);
 
             // Рисуем выход
             spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
