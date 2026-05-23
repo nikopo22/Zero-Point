@@ -42,6 +42,8 @@ public class LevelManager
         }
     }
 
+    public int CurrentLevelIndex => currentIndex;
+
     public void NextLevel()
     {
         currentIndex++;

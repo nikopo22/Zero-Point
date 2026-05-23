@@ -34,6 +34,8 @@ public class Game1 : Game
     private GameState _currentState;
     private MenuState _menuState;
     private PauseMenuState _pauseMenuState;
+    private VictoryState _victoryState;
+    private int _lastCompletedLevelIndex;
 
     private SpriteFont _font;
     private KeyboardState _previousKeyboardState;
@@ -87,6 +89,7 @@ public class Game1 : Game
         _font = Content.Load<SpriteFont>("Fonts/PixelFont");
         _menuState = new MenuState(GraphicsDevice, _font, _menuTexture);
         _pauseMenuState = new PauseMenuState(GraphicsDevice, _font);
+        _victoryState = new VictoryState(GraphicsDevice, _font);
         _helpButton = new Button(new Rectangle(20, 20, 48, 48), "?", _font);
         _backgroundLayers = new List<(Texture2D, float)>
         {
@@ -127,7 +130,7 @@ public class Game1 : Game
             }
         }
 
-        if (_currentState != GameState.Menu)
+        if (_currentState != GameState.Menu && _currentState != GameState.Victory)
         {
             _helpButton.Update(mouseState);
             if (_helpButton.WasReleased(mouseState, _previousMouseState))
@@ -154,11 +157,26 @@ public class Game1 : Game
                     UpdatePlaying(gameTime, keyboardState);
                 break;
 
+            case GameState.Victory:
+                _victoryState.Update(out bool continueClicked, out bool victoryMenuClicked);
+                if (continueClicked)
+                {
+                    _levelManager.NextLevel();
+                    _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+                    _currentState = GameState.Playing;
+                }
+                if (victoryMenuClicked)
+                {
+                    _currentState = GameState.Menu;
+                    _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+                }
+                break;
+
             case GameState.Pause:
-                _pauseMenuState.Update(out bool resumeClicked, out bool menuClicked, out bool exitClicked2);
+                _pauseMenuState.Update(out bool resumeClicked, out bool pauseMenuClicked, out bool exitClicked2);
                 if (resumeClicked)
                     _currentState = GameState.Playing;
-                if (menuClicked)
+                if (pauseMenuClicked)
                 {
                     _currentState = GameState.Menu;
                     _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
@@ -168,7 +186,7 @@ public class Game1 : Game
                 break;
         }
 
-        if (_currentState != GameState.Menu)
+        if (_currentState != GameState.Menu && _currentState != GameState.Victory)
             UpdatePortalAnimation(gameTime);
 
         _previousKeyboardState = keyboardState;
@@ -202,8 +220,9 @@ public class Game1 : Game
 
         if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
         {
-            _levelManager.NextLevel();
-            _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            _lastCompletedLevelIndex = _levelManager.CurrentLevelIndex;
+            _currentState = GameState.Victory;
+            _isHelpVisible = false;
         }
 
         _camera.Follow(_player);
@@ -233,6 +252,12 @@ public class Game1 : Game
             {
                 _spriteBatch.Begin();
                 _pauseMenuState.Draw(_spriteBatch);
+                _spriteBatch.End();
+            }
+            else if (_currentState == GameState.Victory)
+            {
+                _spriteBatch.Begin();
+                _victoryState.Draw(_spriteBatch, _lastCompletedLevelIndex);
                 _spriteBatch.End();
             }
         }
