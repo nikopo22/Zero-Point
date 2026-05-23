@@ -11,9 +11,9 @@ public static class Constants
     public const float PLAYER_JUMP_FORCE = -650f;  
     public const float GRAVITY = 1800f;            
 
-    // размеры робота
-    public const int PLAYER_WIDTH = 32;
-    public const int PLAYER_HEIGHT = 32;
+    // размеры робота (подогнаны под визуальный масштаб и кроп)
+    public const int PLAYER_WIDTH = 64;
+    public const int PLAYER_HEIGHT = 52;
 
     // размеры платформ
     public const int PLATFORM_WIDTH = 80;

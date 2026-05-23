@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using ZeroPoint.Core;
 using ZeroPoint.Entities;
 using ZeroPoint.Utils;
 using System.Collections.Generic;
@@ -21,12 +22,12 @@ public class Level1
     public Vector2 PlayerStartPosition { get; private set; }
     public Rectangle ExitDoor { get; private set; }
 
-    // Текстуры
+    // текстуры
     private Texture2D tileset;
     private Texture2D midBackground;
     private Texture2D farBackground;
 
-    // TMX данные
+    // TMX данные убрать потом
     private TmxMap tmx;
 
     private const int TILE_SIZE = 32;
@@ -63,12 +64,11 @@ public class Level1
         }
         catch
         {
-            // on failure, keep default level
             tmx = null;
         }
     }
 
-    // Позволяет программно установить данные уровня (платформы, шипы и т.д.)
+
     public void SetLevelData(List<Platform> platforms, List<Spike> spikes, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms, Rectangle exitDoor, Vector2 playerStart)
     {
         Platforms = platforms ?? new List<Platform>();
@@ -113,7 +113,7 @@ public class Level1
         ExitDoor = new Rectangle(850, 600, 40, 50);
     }
 
-    public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture)
+    public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture, SpriteSheet portalSpriteSheet, int portalFrame)
     {
         if (tmx != null && tileset != null)
         {
@@ -121,7 +121,7 @@ public class Level1
         }
         else
         {
-            // Рисуем платформы с текстурами
+            // рисуем платформы с текстурами
             if (tileset != null)
             {
                 foreach (var platform in Platforms)
@@ -139,15 +139,30 @@ public class Level1
                     metal.Draw(spriteBatch, blockTexture);
             }
 
-            // Рисуем скрытые платформы и шипы
+            // рисуем скрытые платформы и шипы
             foreach (var hidden in HiddenPlatforms)
                 hidden.Draw(spriteBatch, blockTexture);
 
             foreach (var spike in Spikes)
                 spike.Draw(spriteBatch, spikeTexture);
 
-            // Рисуем выход
-            spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
+            // рисуем выход
+            if (portalSpriteSheet != null)
+            {
+                int portalWidth = portalSpriteSheet.FrameWidth / 5;
+                int portalHeight = portalSpriteSheet.FrameHeight / 5;
+                var portalDrawRect = new Rectangle(
+                    ExitDoor.Center.X - portalWidth / 2,
+                    ExitDoor.Bottom - portalHeight,
+                    portalWidth,
+                    portalHeight);
+
+                portalSpriteSheet.Draw(spriteBatch, portalFrame, portalDrawRect, Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
+            }
         }
     }
 
@@ -160,7 +175,7 @@ public class Level1
         int tileY = (tileIndex / tilesetsPerRow) * TILE_SIZE;
         var sourceRect = new Rectangle(tileX, tileY, TILE_SIZE, TILE_SIZE);
 
-        // Заполняем платформу повторяющимися тайлами
+        // заполняем платформу повторяющимися тайлами
         for (int x = bounds.X; x < bounds.Right; x += TILE_SIZE)
         {
             for (int y = bounds.Y; y < bounds.Bottom; y += TILE_SIZE)

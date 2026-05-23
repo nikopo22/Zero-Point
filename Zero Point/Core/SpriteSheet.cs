@@ -42,7 +42,14 @@ public class SpriteSheet
         Rectangle sourceRect = GetSourceRectangle(frameIndex);
         spriteBatch.Draw(_texture, position, sourceRect, color, 0f, Vector2.Zero, 1f, effects, 0f);
     }
+
+    public void Draw(SpriteBatch spriteBatch, int frameIndex, Vector2 position, Color color, SpriteEffects effects, float scale)
+    {
+        Rectangle sourceRect = GetSourceRectangle(frameIndex);
+        spriteBatch.Draw(_texture, position, sourceRect, color, 0f, Vector2.Zero, scale, effects, 0f);
+    }
     
     public int FrameWidth => _frameWidth;
     public int FrameHeight => _frameHeight;
+    public Texture2D Texture => _texture;
 }

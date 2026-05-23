@@ -16,6 +16,7 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private Texture2D _pixelTexture;
     private SpriteSheet _playerSpriteSheet;
+    private SpriteSheet _portalSpriteSheet;
     private Texture2D _menuTexture;
     private Texture2D _blockTexture;
     private Texture2D _spikeTexture;
@@ -24,6 +25,10 @@ public class Game1 : Game
     private Player _player;
     private Camera _camera;
     private LevelManager _levelManager;
+
+    private int _portalFrame;
+    private double _portalFrameTimer;
+    private const double PortalFrameDuration = 0.16;
 
     private GameState _currentState;
     private MenuState _menuState;
@@ -63,14 +68,15 @@ public class Game1 : Game
         Texture2D playerTexture = Content.Load<Texture2D>("Sprites/OrangeRobot_SpriteSheet");
         System.Diagnostics.Debug.WriteLine($"Размер текстуры: {playerTexture.Width} x {playerTexture.Height}");
 
-        int frameWidth = 32;   // ← ИЗМЕНИ ПОСЛЕ ТОГО, КАК УЗНАЕШЬ РАЗМЕР
-        int frameHeight = 32;  // ← ИЗМЕНИ ПОСЛЕ ТОГО, КАК УЗНАЕШЬ РАЗМЕР
+        int frameWidth = 32;   
+        int frameHeight = 32;  
 
         _playerSpriteSheet = new SpriteSheet(playerTexture, frameWidth, frameHeight);
 
         _menuTexture = Content.Load<Texture2D>("Menu/menu");
         _blockTexture = Content.Load<Texture2D>("Block/block");
         _spikeTexture = Content.Load<Texture2D>("Spike/spike");
+        _portalSpriteSheet = new SpriteSheet(Content.Load<Texture2D>("End/portal"), 230, 545);
 
         _font = Content.Load<SpriteFont>("Fonts/PixelFont");
         _menuState = new MenuState(GraphicsDevice, _font, _menuTexture);
@@ -134,8 +140,21 @@ public class Game1 : Game
                 break;
         }
 
+        if (_currentState != GameState.Menu)
+            UpdatePortalAnimation(gameTime);
+
         _previousKeyboardState = keyboardState;
         base.Update(gameTime);
+    }
+
+    private void UpdatePortalAnimation(GameTime gameTime)
+    {
+        _portalFrameTimer += gameTime.ElapsedGameTime.TotalSeconds;
+        while (_portalFrameTimer >= PortalFrameDuration)
+        {
+            _portalFrame = (_portalFrame + 1) % 4;
+            _portalFrameTimer -= PortalFrameDuration;
+        }
     }
 
     private void UpdatePlaying(GameTime gameTime, KeyboardState keyboardState)
@@ -223,7 +242,7 @@ public class Game1 : Game
 
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
-        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture);
+        _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture, _portalSpriteSheet, _portalFrame);
         _player.Draw(_spriteBatch);
 
         _spriteBatch.End();

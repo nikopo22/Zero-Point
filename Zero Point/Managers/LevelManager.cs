@@ -7,7 +7,7 @@ public class LevelManager
 {
     public Level1 CurrentLevel { get; private set; }
     private ContentManager contentManager;
-    private int currentIndex = 0;
+    private int currentIndex = 1;
 
     public LevelManager(ContentManager contentManager)
     {
@@ -17,14 +17,8 @@ public class LevelManager
 
     private void LoadLevel()
     {
-        // 0 — первая карта (TMX если есть), 1 — простой кодовый уровень, 2 — medium, 3 — hard
-        if (currentIndex == 0)
-        {
-            CurrentLevel = new Level1();
-            // Попробуем загрузить TMX-карту из Content/Levels
-            CurrentLevel.LoadFromTmx(contentManager);
-        }
-        else if (currentIndex == 1)
+        // 1 — простой кодовый уровень, 2 — medium, 3 — hard
+        if (currentIndex == 1)
         {
             CurrentLevel = new Level1();
             // Применяем заранее сгенерированный кодовый уровень (easy)
@@ -42,8 +36,8 @@ public class LevelManager
         }
         else
         {
-            // При превышении — возвращаемся к первой
-            currentIndex = 0;
+            // При превышении — возвращаемся к первому уровню
+            currentIndex = 1;
             LoadLevel();
         }
     }

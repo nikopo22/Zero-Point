@@ -51,26 +51,21 @@ public static class PrebuiltLevels
     {
         var platforms = new List<Platform>()
         {
-            // Ground
+            // земля
             new Platform(0, 680, 1400, 40),
 
-            // Start platform
+            // Start 
             new Platform(100, 600, 180, 25),
 
-            // Upper platforms
-            new Platform(500, 300, 180, 25),
-            new Platform(980, 180, 180, 25),
         };
 
-        // Transparent platforms -> use HiddenPlatform as placeholder
         var hidden = new List<HiddenPlatform>()
         {
             new HiddenPlatform(380, 540, 140, 20),
-            new HiddenPlatform(620, 470, 140, 20),
+
             new HiddenPlatform(900, 400, 140, 20),
         };
 
-        // Sticky walls -> use MetalSurface as placeholder
         var metals = new List<MetalSurface>()
         {
             new MetalSurface(560, 350, 40, 180),
@@ -88,8 +83,7 @@ public static class PrebuiltLevels
             new Spike(800, 655),
             new Spike(840, 655),
 
-            new Spike(720, 445),
-            new Spike(760, 445),
+
         };
 
         var exit = new Rectangle(1080, 110, 40, 50);
@@ -102,21 +96,20 @@ public static class PrebuiltLevels
     {
         var platforms = new List<Platform>()
         {
-            // Ground
+            // земля
             new Platform(0, 680, 1400, 40),
 
             // Start
             new Platform(80, 620, 120, 20),
 
             // Tiny platforms
-            new Platform(650, 500, 90, 20),
-            new Platform(800, 430, 90, 20),
+            // new Platform(650, 500, 90, 20),
+            // new Platform(800, 430, 90, 20),
 
-            // Final platform
+            // Final 
             new Platform(1320, 120, 140, 20),
         };
 
-        // Transparent platforms -> hidden
         var hidden = new List<HiddenPlatform>()
         {
             new HiddenPlatform(260, 570, 120, 20),
@@ -126,7 +119,6 @@ public static class PrebuiltLevels
             new HiddenPlatform(1320, 170, 100, 20),
         };
 
-        // Sticky walls -> metals
         var metals = new List<MetalSurface>()
         {
             new MetalSurface(560, 420, 40, 220),

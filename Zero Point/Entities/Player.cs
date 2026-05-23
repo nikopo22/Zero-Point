@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using ZeroPoint.Abilities;
@@ -16,15 +17,16 @@ public class Player
     public bool IsGrounded { get; set; }
     public bool IsOnMetal { get; set; }
     
-    // === СПОСОБНОСТИ ===
+    //способки
     public MagnetAbility MagnetAbility { get; private set; }
     public ScanAbility ScanAbility { get; private set; }
     
-    // === СПРАЙТ-ЛИСТ И АНИМАЦИЯ ===
+    // анимация
     private SpriteSheet _spriteSheet;
     private bool _facingRight = true;
+    private const float _drawScale = 2.0f;
     
-    // Индексы кадров (согласно твоей нумерации)
+    // индексы кадров
     private int[] _idleFrames = { 0, 1, 2, 3, 4 };
     private int[] _walkFrames = { 5, 6, 7, 8, 9, 10 };
     private int[] _jumpFrames = { 11, 12, 13, 14, 15 };
@@ -35,22 +37,20 @@ public class Player
     private double _animationTimer;
     private double _animationSpeed = 0.08;
     
-    // Состояние анимации
+    // состояние
     private enum AnimationState { Idle, Walking, Jumping, Landing }
     private AnimationState _animationState;
     private bool _wasGrounded;
     private bool _justLanded;
     
-    // === КОЛЛИЗИИ ===
+    // коллизии
     public Rectangle Bounds => new Rectangle((int)Position.X, (int)Position.Y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
     public Rectangle PreviousBounds { get; private set; }
     
-    // === ЦВЕТА ДЛЯ СПОСОБНОСТЕЙ ===
     private Color normalColor;
     private Color magnetColor;
     private KeyboardState _previousKeyboardState;
     
-    // === КОНСТРУКТОР ===
     public Player(Vector2 startPosition, SpriteSheet spriteSheet)
     {
         Position = startPosition;
@@ -72,7 +72,6 @@ public class Player
         _justLanded = false;
     }
     
-    // === ОБНОВЛЕНИЕ ===
     public void Update(GameTime gameTime, KeyboardState keyboardState, 
                        List<MetalSurface> metalSurfaces,
                        List<HiddenPlatform> hiddenPlatforms)
@@ -80,18 +79,18 @@ public class Player
         PreviousBounds = Bounds;
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
         
-        // Обновление способностей
+        // обновление способностей
         MagnetAbility.Update(gameTime);
         ScanAbility.Update(gameTime);
         
-        // Активация способностей по клавишам
+        // активация способностей по клавишам
         if (keyboardState.IsKeyDown(Keys.LeftShift))
             MagnetAbility.Activate();
         
         if (keyboardState.IsKeyDown(Keys.E) && _previousKeyboardState.IsKeyUp(Keys.E))
             ScanAbility.Activate();
         
-        // Сканирование скрытых платформ
+        // сканирование 
         if (ScanAbility.IsActive)
         {
             foreach (var hidden in hiddenPlatforms)
@@ -110,7 +109,7 @@ public class Player
                 hidden.IsRevealed = false;
         }
         
-        // Движение
+        // движение
         float moveDirection = 0;
         if (keyboardState.IsKeyDown(Keys.A))
             moveDirection = -1;
@@ -123,11 +122,10 @@ public class Player
         
         Velocity = new Vector2(moveDirection * currentSpeed, Velocity.Y);
         
-        // Направление взгляда
         if (moveDirection > 0) _facingRight = true;
         if (moveDirection < 0) _facingRight = false;
         
-        // Прыжок
+        // прыжок
         if (keyboardState.IsKeyDown(Keys.W) && _previousKeyboardState.IsKeyUp(Keys.W) && 
             (IsGrounded || (MagnetAbility.IsActive && IsOnMetal)))
         {
@@ -138,13 +136,13 @@ public class Player
             _currentAnimationIndex = 0;
         }
         
-        // Гравитация
+        // гравитация
         if (!(IsOnMetal && MagnetAbility.IsActive))
             Velocity = new Vector2(Velocity.X, Velocity.Y + Constants.GRAVITY * deltaTime);
         
         Position += Velocity * deltaTime;
         
-        // Проверка на приземление
+        // проверка на приземление
         _justLanded = !IsGrounded && _wasGrounded;
         if (_justLanded)
         {
@@ -152,7 +150,7 @@ public class Player
             _currentAnimationIndex = 0;
         }
         
-        // === АНИМАЦИЯ ===
+        //анимка
         _animationTimer += deltaTime;
         
         if (!_justLanded)
@@ -208,7 +206,7 @@ public class Player
             _currentFrame = currentFrames[_currentAnimationIndex];
         }
         
-        // Прилипание к металлу
+        // прилипание к стене
         IsOnMetal = false;
         foreach (var metal in metalSurfaces)
         {
@@ -246,7 +244,7 @@ public class Player
         _previousKeyboardState = keyboardState;
     }
     
-    // === ПОЛУЧЕНИЕ МАССИВА КАДРОВ ДЛЯ ТЕКУЩЕЙ АНИМАЦИИ ===
+    // массив кадров
     private int[] GetCurrentFrames()
     {
         return _animationState switch
@@ -259,15 +257,31 @@ public class Player
         };
     }
     
-    // === ОТРИСОВКА ===
+    // отрисовка
     public void Draw(SpriteBatch spriteBatch)
     {
         SpriteEffects effect = _facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
         Color drawColor = MagnetAbility.IsActive ? magnetColor : normalColor;
-        _spriteSheet.Draw(spriteBatch, _currentFrame, Position, drawColor, effect);
+
+        // Кроп сверху, чтобы убрать лишнюю прозрачную полосу над головой
+        int cropTop = 6; // pixels to cut from top of frame
+
+        Rectangle src = _spriteSheet.GetSourceRectangle(_currentFrame);
+        src.Y += cropTop;
+        src.Height = Math.Max(1, src.Height - cropTop);
+
+        float destW = src.Width * _drawScale;
+        float destH = src.Height * _drawScale;
+
+        float drawX = Position.X - (destW - Constants.PLAYER_WIDTH) / 2f;
+        float drawY = Position.Y - (destH - Constants.PLAYER_HEIGHT);
+
+        var destRect = new Rectangle((int)Math.Round(drawX), (int)Math.Round(drawY), (int)Math.Round(destW), (int)Math.Round(destH));
+
+        spriteBatch.Draw(_spriteSheet.Texture, destRect, src, drawColor, 0f, Vector2.Zero, effect, 0f);
     }
     
-    // === ВОЗРОЖДЕНИЕ ===
+    // возрожденме
     public void Reset(Vector2 respawnPosition)
     {
         Position = respawnPosition;

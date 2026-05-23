@@ -81,3 +81,10 @@
 /processorParam:ColorKeyEnabled=False
 /processorParam:GenerateMipmaps=False
 /build:Menu/menu.jpg
+
+#begin End/portal.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/build:End/portal.png
