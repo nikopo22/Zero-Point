@@ -80,6 +80,7 @@ obj/Debug/net8.0/
 Program.cs
 States/
  GameState.cs
+ HelpState.cs
  MenuState.cs
  PauseMenuState.cs
 UI/Button.cs

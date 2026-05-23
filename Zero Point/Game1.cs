@@ -5,6 +5,7 @@ using ZeroPoint.Core;
 using ZeroPoint.Entities;
 using ZeroPoint.Managers;
 using ZeroPoint.States;
+using ZeroPoint.UI;
 using ZeroPoint.Utils;
 using System.Collections.Generic;
 
@@ -36,6 +37,9 @@ public class Game1 : Game
 
     private SpriteFont _font;
     private KeyboardState _previousKeyboardState;
+    private MouseState _previousMouseState;
+    private Button _helpButton;
+    private bool _isHelpVisible;
 
     public Game1()
     {
@@ -53,6 +57,8 @@ public class Game1 : Game
         _camera = new Camera();
         _levelManager = new LevelManager(Content);
         _currentState = GameState.Menu;
+        _previousKeyboardState = Keyboard.GetState();
+        _previousMouseState = Mouse.GetState();
 
         base.Initialize();
     }
@@ -81,6 +87,7 @@ public class Game1 : Game
         _font = Content.Load<SpriteFont>("Fonts/PixelFont");
         _menuState = new MenuState(GraphicsDevice, _font, _menuTexture);
         _pauseMenuState = new PauseMenuState(GraphicsDevice, _font);
+        _helpButton = new Button(new Rectangle(20, 20, 48, 48), "?", _font);
         _backgroundLayers = new List<(Texture2D, float)>
         {
             (Content.Load<Texture2D>("Backgrounds/1"), 0.0f),
@@ -98,15 +105,35 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         var keyboardState = Keyboard.GetState();
+        var mouseState = Mouse.GetState();
 
         if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
         {
-            if (_currentState == GameState.Playing)
+            if (_isHelpVisible)
+            {
+                _isHelpVisible = false;
+            }
+            else if (_currentState == GameState.Playing)
+            {
                 _currentState = GameState.Pause;
+            }
             else if (_currentState == GameState.Pause)
+            {
                 _currentState = GameState.Playing;
+            }
             else if (_currentState == GameState.Menu)
+            {
                 Exit();
+            }
+        }
+
+        if (_currentState != GameState.Menu)
+        {
+            _helpButton.Update(mouseState);
+            if (_helpButton.WasReleased(mouseState, _previousMouseState))
+            {
+                _isHelpVisible = !_isHelpVisible;
+            }
         }
 
         switch (_currentState)
@@ -123,7 +150,8 @@ public class Game1 : Game
                 break;
 
             case GameState.Playing:
-                UpdatePlaying(gameTime, keyboardState);
+                if (!_isHelpVisible)
+                    UpdatePlaying(gameTime, keyboardState);
                 break;
 
             case GameState.Pause:
@@ -144,6 +172,7 @@ public class Game1 : Game
             UpdatePortalAnimation(gameTime);
 
         _previousKeyboardState = keyboardState;
+        _previousMouseState = mouseState;
         base.Update(gameTime);
     }
 
@@ -194,6 +223,12 @@ public class Game1 : Game
         {
             DrawGameplay();
 
+            _spriteBatch.Begin();
+            _helpButton.Draw(_spriteBatch, _pixelTexture);
+            if (_isHelpVisible)
+                DrawHelpOverlay();
+            _spriteBatch.End();
+
             if (_currentState == GameState.Pause)
             {
                 _spriteBatch.Begin();
@@ -203,6 +238,41 @@ public class Game1 : Game
         }
 
         base.Draw(gameTime);
+    }
+
+    private void DrawHelpOverlay()
+    {
+        var overlayWidth = 560;
+        var overlayHeight = 380;
+        var overlayRect = new Rectangle((Constants.SCREEN_WIDTH - overlayWidth) / 2, (Constants.SCREEN_HEIGHT - overlayHeight) / 2 + 20, overlayWidth, overlayHeight);
+
+        _spriteBatch.Draw(_pixelTexture, new Rectangle(0, 0, Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT), new Color(0, 0, 0, 150));
+        _spriteBatch.Draw(_pixelTexture, overlayRect, new Color(30, 30, 50, 230));
+        _spriteBatch.Draw(_pixelTexture, new Rectangle(overlayRect.X, overlayRect.Y, overlayRect.Width, 3), Color.White);
+        _spriteBatch.Draw(_pixelTexture, new Rectangle(overlayRect.X, overlayRect.Y + overlayRect.Height - 3, overlayRect.Width, 3), Color.White);
+        _spriteBatch.Draw(_pixelTexture, new Rectangle(overlayRect.X, overlayRect.Y, 3, overlayRect.Height), Color.White);
+        _spriteBatch.Draw(_pixelTexture, new Rectangle(overlayRect.X + overlayRect.Width - 3, overlayRect.Y, 3, overlayRect.Height), Color.White);
+
+        string title = "Управление";
+        Vector2 titleSize = _font.MeasureString(title);
+        _spriteBatch.DrawString(_font, title, new Vector2(overlayRect.X + (overlayRect.Width - titleSize.X) / 2, overlayRect.Y + 20), Color.LightGoldenrodYellow);
+
+        var lines = new[]
+        {
+            "A/D - влево/вправо",
+            "W - прыжок",
+            "E - сканирование",
+            "SHIFT - прилипание",
+            "ESC - пауза",
+            "ALT+ENTER - на полный экран"
+        };
+
+        float lineY = overlayRect.Y + 90;
+        foreach (var line in lines)
+        {
+            _spriteBatch.DrawString(_font, line, new Vector2(overlayRect.X + 40, lineY), Color.White);
+            lineY += 48;
+        }
     }
 
 
