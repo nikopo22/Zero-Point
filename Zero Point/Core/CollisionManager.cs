@@ -1,84 +1,96 @@
-﻿using Microsoft.Xna.Framework;
-using ZeroPoint.Entities;
+﻿using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using ZeroPoint.Entities;
+using ZeroPoint.Utils;
 
 namespace ZeroPoint.Core;
 
 public static class CollisionManager
 {
-    public static bool CheckCollision(Rectangle rect1, Rectangle rect2)
-    {
-        return rect1.Intersects(rect2); 
-    }
+    public static bool CheckCollision(Rectangle rect1, Rectangle rect2) => rect1.Intersects(rect2);
 
     public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms = null, List<InvisibleWall> invisibleWalls = null)
     {
         player.IsGrounded = false;
 
-        if (invisibleWalls != null)
+        if (platforms.Count > 0)
         {
-            CheckInvisibleWallCollisions(player, invisibleWalls);
-        }
-
-        CheckPlatformCollisions(player, platforms);
-        
-        CheckMetalSurfaceCollisions(player, metalSurfaces);
-
-        if (hiddenPlatforms != null)
-        {
-            CheckHiddenPlatformCollisions(player, hiddenPlatforms);
-        }
-    }
-
-    private static void CheckPlatformCollisions(Player player, List<Platform> platforms)
-    {
-        foreach (var platform in platforms)
-        {
-            if (CheckCollision(player.Bounds, platform.Bounds))
-            {
+            var platformTree = BuildQuadTree(platforms, platform => platform.Bounds);
+            var candidates = platformTree.Query(player.Bounds, new List<Platform>());
+            foreach (var platform in candidates)
                 ResolveCollision(player, platform.Bounds);
-            }
         }
-    }
 
-    private static void CheckInvisibleWallCollisions(Player player, List<InvisibleWall> invisibleWalls)
-    {
-        foreach (var wall in invisibleWalls)
+        if (invisibleWalls != null && invisibleWalls.Count > 0)
         {
-            if (CheckCollision(player.Bounds, wall.Bounds))
-            {
+            var wallTree = BuildQuadTree(invisibleWalls, wall => wall.Bounds);
+            var candidates = wallTree.Query(player.Bounds, new List<InvisibleWall>());
+            foreach (var wall in candidates)
                 ResolveCollision(player, wall.Bounds);
-            }
         }
-    }
 
-    private static void CheckMetalSurfaceCollisions(Player player, List<MetalSurface> metalSurfaces)
-    {
-        foreach (var metal in metalSurfaces)
+        if (metalSurfaces.Count > 0)
         {
-            if (CheckCollision(player.Bounds, metal.Bounds))
-            {
+            var metalTree = BuildQuadTree(metalSurfaces, metal => metal.Bounds);
+            var candidates = metalTree.Query(player.Bounds, new List<MetalSurface>());
+            foreach (var metal in candidates)
                 ResolveCollision(player, metal.Bounds);
-            }
         }
-    }
 
-    private static void CheckHiddenPlatformCollisions(Player player, List<HiddenPlatform> hiddenPlatforms)
-    {
-        foreach (var hidden in hiddenPlatforms)
+        if (hiddenPlatforms != null && hiddenPlatforms.Count > 0)
         {
-            if (!hidden.IsRevealed)
-                continue;
-
-            if (CheckCollision(player.Bounds, hidden.Bounds))
+            var hiddenTree = BuildQuadTree(hiddenPlatforms, hidden => hidden.Bounds);
+            var candidates = hiddenTree.Query(player.Bounds, new List<HiddenPlatform>());
+            foreach (var hidden in candidates)
             {
+                if (!hidden.IsRevealed)
+                    continue;
+
                 ResolveCollision(player, hidden.Bounds);
             }
         }
     }
 
+    private static QuadTree<T> BuildQuadTree<T>(IEnumerable<T> items, Func<T, Rectangle> boundsAccessor)
+    {
+        var itemList = items as IList<T> ?? new List<T>(items);
+        var bounds = CreateBounds(itemList, boundsAccessor);
+        var quadTree = new QuadTree<T>(bounds, boundsAccessor);
+
+        foreach (var item in itemList)
+            quadTree.Insert(item);
+
+        return quadTree;
+    }
+
+    private static Rectangle CreateBounds<T>(IList<T> items, Func<T, Rectangle> boundsAccessor)
+    {
+        if (items.Count == 0)
+            return new Rectangle(0, 0, Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT);
+
+        int minX = int.MaxValue;
+        int minY = int.MaxValue;
+        int maxX = int.MinValue;
+        int maxY = int.MinValue;
+
+        foreach (var item in items)
+        {
+            var itemBounds = boundsAccessor(item);
+            minX = Math.Min(minX, itemBounds.X);
+            minY = Math.Min(minY, itemBounds.Y);
+            maxX = Math.Max(maxX, itemBounds.Right);
+            maxY = Math.Max(maxY, itemBounds.Bottom);
+        }
+
+        int width = Math.Max(1, maxX - minX);
+        int height = Math.Max(1, maxY - minY);
+
+        return new Rectangle(minX, minY, width, height);
+    }
+
     private static void ResolveCollision(Player player, Rectangle platformBounds)
-    {       
+    {
         if (player.Velocity.Y > 0 && player.PreviousBounds.Bottom <= platformBounds.Top + 5)
         {
             player.Position = new Vector2(
@@ -86,9 +98,8 @@ public static class CollisionManager
                 platformBounds.Top - player.Bounds.Height
             );
             player.Velocity = new Vector2(player.Velocity.X, 0);
-            player.IsGrounded = true;     
+            player.IsGrounded = true;
         }
-
         else if (player.Velocity.Y < 0 && player.PreviousBounds.Top >= platformBounds.Bottom - 5)
         {
             player.Position = new Vector2(
@@ -97,10 +108,8 @@ public static class CollisionManager
             );
             player.Velocity = new Vector2(player.Velocity.X, 0);
         }
-
         else
         {
-  
             if (player.PreviousBounds.Right <= platformBounds.Left + 5)
             {
                 player.Position = new Vector2(
@@ -108,7 +117,6 @@ public static class CollisionManager
                     player.Position.Y
                 );
             }
-  
             else if (player.PreviousBounds.Left >= platformBounds.Right - 5)
             {
                 player.Position = new Vector2(
@@ -121,13 +129,18 @@ public static class CollisionManager
 
     public static bool CheckSpikeCollision(Player player, List<Spike> spikes)
     {
-        foreach (var spike in spikes)
+        if (spikes == null || spikes.Count == 0)
+            return false;
+
+        var spikeTree = BuildQuadTree(spikes, spike => spike.Bounds);
+        var candidates = spikeTree.Query(player.Bounds, new List<Spike>());
+
+        foreach (var spike in candidates)
         {
             if (CheckCollision(player.Bounds, spike.Bounds))
-            {
-                return true;  
-            }
+                return true;
         }
-        return false; 
+
+        return false;
     }
 }
