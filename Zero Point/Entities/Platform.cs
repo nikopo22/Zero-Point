@@ -16,5 +16,4 @@ public class Platform
         color = new Color(100, 100, 100);  
     }
 
-    // Rendering moved to LevelRenderer
 }

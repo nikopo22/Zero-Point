@@ -21,5 +21,4 @@ public class HiddenPlatform
         IsRevealed = false;
     }
 
-    // Rendering moved to LevelRenderer
 }

@@ -7,8 +7,6 @@ namespace ZeroPoint.Managers;
 
 public class LevelManager
 {
-    // Observer Pattern Event
-    /// <summary>Raised when the current level is completed.</summary>
     public event Action? LevelCompleted;
 
     public Level1 CurrentLevel { get; private set; } = null!;
@@ -64,7 +62,6 @@ public class LevelManager
         LoadLevel();
     }
     
-    /// <summary>Observer Pattern: Raise LevelCompleted event.</summary>
     public void OnLevelCompleted()
     {
         LevelCompleted?.Invoke();

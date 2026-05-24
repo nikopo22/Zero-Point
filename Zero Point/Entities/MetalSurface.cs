@@ -16,5 +16,4 @@ public class MetalSurface
         color = new Color(150, 140, 130);  
     }
 
-    // Rendering moved to LevelRenderer
 }

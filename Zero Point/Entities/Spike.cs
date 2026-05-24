@@ -12,5 +12,4 @@ public class Spike
         Bounds = new Rectangle(x, y, 32, 32);
     }
 
-    // Rendering moved to LevelRenderer
 }

@@ -11,11 +11,9 @@ namespace ZeroPoint.Entities;
 
 public class Player
 {
-    // Observer Pattern Events
-    /// <summary>Raised when player's health changes. Parameter is new health value.</summary>
+
     public event Action<int>? HealthChanged;
     
-    /// <summary>Raised when player dies (health reaches 0).</summary>
     public event Action? PlayerDied;
 
     public Vector2 Position { get; set; }
@@ -54,7 +52,7 @@ public class Player
     
     private Color normalColor;
     private Color magnetColor;
-    private float _inputDirection = 0f; // -1 left, 0 none, 1 right
+    private float _inputDirection = 0f; 
     
     public Player(Vector2 startPosition)
     {
@@ -62,7 +60,6 @@ public class Player
         Velocity = Vector2.Zero;
         IsGrounded = false;
         IsOnMetal = false;
-        // SpriteSheet is removed from model; rendering is handled by PlayerRenderer
         
         normalColor = Color.White;
         magnetColor = new Color(100, 150, 255);
@@ -87,8 +84,7 @@ public class Player
         
         MagnetAbility.Update(gameTime);
         ScanAbility.Update(gameTime);
-        
-        // Abilities (activation is handled by controller via Activate/Deactivate methods)
+
         if (ScanAbility.IsActive)
         {
             foreach (var hidden in hiddenPlatforms)
@@ -107,7 +103,6 @@ public class Player
                 hidden.IsRevealed = false;
         }
 
-        // Movement is set via controller by setting _inputDirection each frame
         float currentSpeed = Constants.PLAYER_SPEED;
         if (MagnetAbility.IsActive && IsOnMetal)
             currentSpeed *= 0.7f;
@@ -116,8 +111,6 @@ public class Player
 
         if (_inputDirection > 0) _facingRight = true;
         if (_inputDirection < 0) _facingRight = false;
-
-        // Jumping is triggered by controller via Jump()
         
         if (!(IsOnMetal && MagnetAbility.IsActive))
             Velocity = new Vector2(Velocity.X, Velocity.Y + Constants.GRAVITY * deltaTime);
@@ -223,7 +216,6 @@ public class Player
         _wasGrounded = IsGrounded;
     }
 
-    // Controller-facing API
     public void MoveLeft() => _inputDirection = -1f;
     public void MoveRight() => _inputDirection = 1f;
     public void StopMoving() => _inputDirection = 0f;
@@ -258,7 +250,6 @@ public class Player
         };
     }
     
-    // Rendering removed from model; use PlayerRenderer to draw.
     
     public void Reset(Vector2 respawnPosition)
     {
@@ -274,12 +265,10 @@ public class Player
         _wasGrounded = false;
         _justLanded = false;
         
-        // Restore health when respawning
         Health = 1;
         HealthChanged?.Invoke(Health);
     }
-    
-    /// <summary>Observer Pattern: Reduce health by 1 and raise HealthChanged event.</summary>
+
     public void TakeDamage()
     {
         if (Health > 0)
@@ -294,7 +283,6 @@ public class Player
         }
     }
     
-    /// <summary>Observer Pattern: Raise PlayerDied event.</summary>
     private void Die()
     {
         PlayerDied?.Invoke();

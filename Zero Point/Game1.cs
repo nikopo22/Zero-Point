@@ -107,6 +107,7 @@ public class Game1 : Game
         _playerController = new PlayerController();
         
         // Observer Pattern: Subscribe to events
+        _player.HealthChanged += OnHealthChanged;
         _player.PlayerDied += OnPlayerDied;
         _levelManager.LevelCompleted += OnLevelCompleted;
     }
@@ -368,6 +369,13 @@ public class Game1 : Game
     }
     
     // Observer Pattern: Event handlers
+    
+    /// <summary>Handles HealthChanged event: can update HUD with new health value.</summary>
+    private void OnHealthChanged(int health)
+    {
+        // TODO: Update HUD or UI elements with new health value if needed
+        System.Diagnostics.Debug.WriteLine($"Player health changed to: {health}");
+    }
     
     /// <summary>Handles PlayerDied event: reset player to respawn position.</summary>
     private void OnPlayerDied()
