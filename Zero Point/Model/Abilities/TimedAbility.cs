@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 
 namespace ZeroPoint.Abilities;
 
-/// класс для способностей с ограничением по времени
 public abstract class TimedAbility : IAbility
 {
     public string Name { get; protected set; }

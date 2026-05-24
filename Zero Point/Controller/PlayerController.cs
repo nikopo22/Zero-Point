@@ -14,7 +14,6 @@ public class PlayerController
 
     public void Update(Player player, KeyboardState keyboardState)
     {
-        // Movement
         if (keyboardState.IsKeyDown(Keys.A))
             player.MoveLeft();
         else if (keyboardState.IsKeyDown(Keys.D))
@@ -22,17 +21,14 @@ public class PlayerController
         else
             player.StopMoving();
 
-        // Jump (detect rising edge)
         if (keyboardState.IsKeyDown(Keys.W) && _previousKeyboardState.IsKeyUp(Keys.W))
             player.Jump();
 
-        // Magnet ability (hold)
         if (keyboardState.IsKeyDown(Keys.LeftShift))
             player.ActivateMagnet();
         else
             player.DeactivateMagnet();
 
-        // Scan ability (toggle on E press)
         if (keyboardState.IsKeyDown(Keys.E) && _previousKeyboardState.IsKeyUp(Keys.E))
         {
             if (player.ScanAbility.IsActive)
