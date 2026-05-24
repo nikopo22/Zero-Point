@@ -6,8 +6,6 @@ using ZeroPoint.Entities;
 using ZeroPoint.Utils;
 using System.Collections.Generic;
 using System;
-using System.IO;
-using TiledSharp;
 
 namespace ZeroPoint.Levels;
 
@@ -27,9 +25,6 @@ public class Level1
     private Texture2D tileset;
     private Texture2D midBackground;
     private Texture2D farBackground;
-
-    // TMX данные убрать потом
-    private TmxMap tmx;
 
     private const int TILE_SIZE = 32;
 
@@ -52,23 +47,7 @@ public class Level1
         farBackground = farBg;
     }
 
-    public void LoadFromTmx(ContentManager contentManager)
-    {
-        try
-        {
-            var basePath = AppContext.BaseDirectory;
-            var tmxPath = Path.Combine(basePath, "Content", "Levels", "level.tmx");
 
-            if (!File.Exists(tmxPath))
-                return;
-
-            tmx = new TmxMap(tmxPath);
-        }
-        catch
-        {
-            tmx = null;
-        }
-    }
 
 
     public void SetLevelData(List<Platform> platforms, List<Spike> spikes, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms, Rectangle exitDoor, Vector2 playerStart, List<InvisibleWall> invisibleWalls = null)
@@ -121,54 +100,47 @@ public class Level1
 
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture, SpriteSheet portalSpriteSheet, int portalFrame)
     {
-        if (tmx != null && tileset != null)
+        // рисуем платформы с текстурами
+        if (tileset != null)
         {
-            DrawTmxLayers(spriteBatch);
+            foreach (var platform in Platforms)
+                DrawTiledPlatform(spriteBatch, platform.Bounds, 4);
+
+            foreach (var metal in MetalSurfaces)
+                DrawTiledPlatform(spriteBatch, metal.Bounds, 3);
         }
         else
         {
-            // рисуем платформы с текстурами
-            if (tileset != null)
-            {
-                foreach (var platform in Platforms)
-                    DrawTiledPlatform(spriteBatch, platform.Bounds, 4);
+            foreach (var platform in Platforms)
+                platform.Draw(spriteBatch, blockTexture);
 
-                foreach (var metal in MetalSurfaces)
-                    DrawTiledPlatform(spriteBatch, metal.Bounds, 3);
-            }
-            else
-            {
-                foreach (var platform in Platforms)
-                    platform.Draw(spriteBatch, blockTexture);
+            foreach (var metal in MetalSurfaces)
+                metal.Draw(spriteBatch, blockTexture);
+        }
 
-                foreach (var metal in MetalSurfaces)
-                    metal.Draw(spriteBatch, blockTexture);
-            }
+        // рисуем скрытые платформы и шипы
+        foreach (var hidden in HiddenPlatforms)
+            hidden.Draw(spriteBatch, blockTexture);
 
-            // рисуем скрытые платформы и шипы
-            foreach (var hidden in HiddenPlatforms)
-                hidden.Draw(spriteBatch, blockTexture);
+        foreach (var spike in Spikes)
+            spike.Draw(spriteBatch, spikeTexture);
 
-            foreach (var spike in Spikes)
-                spike.Draw(spriteBatch, spikeTexture);
+        // рисуем выход
+        if (portalSpriteSheet != null)
+        {
+            int portalWidth = portalSpriteSheet.FrameWidth / 5;
+            int portalHeight = portalSpriteSheet.FrameHeight / 5;
+            var portalDrawRect = new Rectangle(
+                ExitDoor.Center.X - portalWidth / 2,
+                ExitDoor.Bottom - portalHeight,
+                portalWidth,
+                portalHeight);
 
-            // рисуем выход
-            if (portalSpriteSheet != null)
-            {
-                int portalWidth = portalSpriteSheet.FrameWidth / 5;
-                int portalHeight = portalSpriteSheet.FrameHeight / 5;
-                var portalDrawRect = new Rectangle(
-                    ExitDoor.Center.X - portalWidth / 2,
-                    ExitDoor.Bottom - portalHeight,
-                    portalWidth,
-                    portalHeight);
-
-                portalSpriteSheet.Draw(spriteBatch, portalFrame, portalDrawRect, Color.White);
-            }
-            else
-            {
-                spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
-            }
+            portalSpriteSheet.Draw(spriteBatch, portalFrame, portalDrawRect, Color.White);
+        }
+        else
+        {
+            spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
         }
     }
 
@@ -195,31 +167,5 @@ public class Level1
         }
     }
 
-    private void DrawTmxLayers(SpriteBatch spriteBatch)
-    {
-        if (tmx == null || tileset == null) return;
 
-        int tilesPerRow = tileset.Width / tmx.TileWidth;
-
-        foreach (var layer in tmx.Layers)
-        {
-            for (int y = 0; y < tmx.Height; y++)
-            {
-                for (int x = 0; x < tmx.Width; x++)
-                {
-                    var tile = layer.Tiles[x + y * tmx.Width];
-                    if (tile.Gid == 0) continue;
-
-                    int tileId = tile.Gid - tmx.Tilesets[0].FirstGid;
-                    int sx = (tileId % tilesPerRow) * tmx.TileWidth;
-                    int sy = (tileId / tilesPerRow) * tmx.TileHeight;
-
-                    var src = new Rectangle(sx, sy, tmx.TileWidth, tmx.TileHeight);
-                    var dest = new Rectangle(x * tmx.TileWidth, y * tmx.TileHeight, tmx.TileWidth, tmx.TileHeight);
-
-                    spriteBatch.Draw(tileset, dest, src, Color.White);
-                }
-            }
-        }
-    }
 }

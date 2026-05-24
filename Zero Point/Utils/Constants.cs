@@ -27,6 +27,6 @@ public static class Constants
     public const float SCAN_RADIUS = 300f;
     
     // размеры уровня
-    public const int LEVEL_WIDTH = 2000;
+    public const int LEVEL_WIDTH = 4500;
     public const int LEVEL_HEIGHT = 1000;
 }
