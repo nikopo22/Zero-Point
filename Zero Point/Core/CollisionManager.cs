@@ -13,9 +13,15 @@ public static class CollisionManager
     }
 
     //столкновения игрока с платформами, металлическими поверхностями и скрытыми платформами
-    public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms = null)
+    public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms = null, List<InvisibleWall> invisibleWalls = null)
     {
         player.IsGrounded = false;
+
+        // Проверяем невидимые стены
+        if (invisibleWalls != null)
+        {
+            CheckInvisibleWallCollisions(player, invisibleWalls);
+        }
 
         // Проверяем обычные платформы
         CheckPlatformCollisions(player, platforms);
@@ -38,6 +44,17 @@ public static class CollisionManager
             if (CheckCollision(player.Bounds, platform.Bounds))
             {
                 ResolveCollision(player, platform.Bounds);
+            }
+        }
+    }
+
+    private static void CheckInvisibleWallCollisions(Player player, List<InvisibleWall> invisibleWalls)
+    {
+        foreach (var wall in invisibleWalls)
+        {
+            if (CheckCollision(player.Bounds, wall.Bounds))
+            {
+                ResolveCollision(player, wall.Bounds);
             }
         }
     }

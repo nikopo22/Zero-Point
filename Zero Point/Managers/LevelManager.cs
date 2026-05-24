@@ -49,4 +49,9 @@ public class LevelManager
         currentIndex++;
         LoadLevel();
     }
+
+    public void ReloadLevel()
+    {
+        LoadLevel();
+    }
 }

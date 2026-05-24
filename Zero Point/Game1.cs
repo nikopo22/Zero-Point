@@ -158,10 +158,16 @@ public class Game1 : Game
                 break;
 
             case GameState.Victory:
-                _victoryState.Update(out bool continueClicked, out bool victoryMenuClicked);
+                _victoryState.Update(out bool continueClicked, out bool retryClicked, out bool victoryMenuClicked);
                 if (continueClicked)
                 {
                     _levelManager.NextLevel();
+                    _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+                    _currentState = GameState.Playing;
+                }
+                if (retryClicked)
+                {
+                    _levelManager.ReloadLevel();
                     _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
                     _currentState = GameState.Playing;
                 }
@@ -213,7 +219,8 @@ public class Game1 : Game
         CollisionManager.HandleCollisions(_player,
             _levelManager.CurrentLevel.Platforms,
             _levelManager.CurrentLevel.MetalSurfaces,
-            _levelManager.CurrentLevel.HiddenPlatforms);
+            _levelManager.CurrentLevel.HiddenPlatforms,
+            _levelManager.CurrentLevel.InvisibleWalls);
 
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
             _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
@@ -225,7 +232,7 @@ public class Game1 : Game
             _isHelpVisible = false;
         }
 
-        _camera.Follow(_player);
+        _camera.Follow(_player, _levelManager.CurrentLevel.InvisibleWalls);
     }
 
     protected override void Draw(GameTime gameTime)

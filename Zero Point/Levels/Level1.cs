@@ -18,6 +18,7 @@ public class Level1
     public List<Spike> Spikes { get; private set; }
     public List<MetalSurface> MetalSurfaces { get; private set; }
     public List<HiddenPlatform> HiddenPlatforms { get; private set; }
+    public List<InvisibleWall> InvisibleWalls { get; private set; }
 
     public Vector2 PlayerStartPosition { get; private set; }
     public Rectangle ExitDoor { get; private set; }
@@ -38,6 +39,7 @@ public class Level1
         Spikes = new List<Spike>();
         MetalSurfaces = new List<MetalSurface>();
         HiddenPlatforms = new List<HiddenPlatform>();
+        InvisibleWalls = new List<InvisibleWall>();
 
         PlayerStartPosition = new Vector2(100, 500);
         LoadDefaultLevel();
@@ -69,18 +71,22 @@ public class Level1
     }
 
 
-    public void SetLevelData(List<Platform> platforms, List<Spike> spikes, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms, Rectangle exitDoor, Vector2 playerStart)
+    public void SetLevelData(List<Platform> platforms, List<Spike> spikes, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms, Rectangle exitDoor, Vector2 playerStart, List<InvisibleWall> invisibleWalls = null)
     {
         Platforms = platforms ?? new List<Platform>();
         Spikes = spikes ?? new List<Spike>();
         MetalSurfaces = metalSurfaces ?? new List<MetalSurface>();
         HiddenPlatforms = hiddenPlatforms ?? new List<HiddenPlatform>();
+        InvisibleWalls = invisibleWalls ?? new List<InvisibleWall>();
         ExitDoor = exitDoor;
         PlayerStartPosition = playerStart;
     }
 
     private void LoadDefaultLevel()
     {
+        // невидимые стены
+        InvisibleWalls.Add(new InvisibleWall(0, 0, 50, 800));
+        InvisibleWalls.Add(new InvisibleWall(1950, 0, 50, 800));
 
         // пол
         Platforms.Add(new Platform(0, 700, 2000, 20));

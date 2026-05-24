@@ -37,6 +37,11 @@ public static class PrebuiltLevels
         // Нет металлических или скрытых платформ в этом уровне
         var metals = new List<MetalSurface>();
         var hidden = new List<HiddenPlatform>();
+        var walls = new List<InvisibleWall>()
+        {
+            new InvisibleWall(0, 0, 50, 800),
+            new InvisibleWall(1350, 0, 50, 800),
+        };
 
         // Выход (Finish) — используем прямоугольник рядом с указанной позицией
         var exit = new Rectangle(1220, 260, 40, 50);
@@ -44,7 +49,7 @@ public static class PrebuiltLevels
         // Старт игрока — оставим стандартный
         var playerStart = level.PlayerStartPosition;
 
-        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart);
+        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart, walls);
     }
 
     public static void ApplyMediumLevel(Level1 level)
@@ -86,10 +91,16 @@ public static class PrebuiltLevels
 
         };
 
+        var walls = new List<InvisibleWall>()
+        {
+            new InvisibleWall(0, 0, 50, 800),
+            new InvisibleWall(1350, 0, 50, 800),
+        };
+
         var exit = new Rectangle(1080, 110, 40, 50);
         var playerStart = level.PlayerStartPosition;
 
-        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart);
+        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart, walls);
     }
 
     public static void ApplyHardLevel(Level1 level)
@@ -145,9 +156,15 @@ public static class PrebuiltLevels
             new Spike(1340, 655),
         };
 
+        var walls = new List<InvisibleWall>()
+        {
+            new InvisibleWall(0, 0, 50, 800),
+            new InvisibleWall(1350, 0, 50, 800),
+        };
+
         var exit = new Rectangle(1380, 50, 40, 50);
         var playerStart = level.PlayerStartPosition;
 
-        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart);
+        level.SetLevelData(platforms, spikes, metals, hidden, exit, playerStart, walls);
     }
 }
