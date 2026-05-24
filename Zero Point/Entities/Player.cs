@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using ZeroPoint.Abilities;
 using ZeroPoint.Core;
 using ZeroPoint.Utils;
@@ -13,10 +12,10 @@ public class Player
 {
     // Observer Pattern Events
     /// <summary>Raised when player's health changes. Parameter is new health value.</summary>
-    public event Action<int>? HealthChanged;
+    public event Action<int> HealthChanged;
     
     /// <summary>Raised when player dies (health reaches 0).</summary>
-    public event Action? PlayerDied;
+    public event Action PlayerDied;
 
     public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
@@ -54,7 +53,7 @@ public class Player
     
     private Color normalColor;
     private Color magnetColor;
-    private KeyboardState _previousKeyboardState;
+    private float _inputDirection = 0f; // -1 left, 0 none, 1 right
     
     public Player(Vector2 startPosition)
     {
@@ -78,7 +77,7 @@ public class Player
         _justLanded = false;
     }
     
-    public void Update(GameTime gameTime, KeyboardState keyboardState, 
+    public void Update(GameTime gameTime,
                        List<MetalSurface> metalSurfaces,
                        List<HiddenPlatform> hiddenPlatforms)
     {
@@ -88,12 +87,7 @@ public class Player
         MagnetAbility.Update(gameTime);
         ScanAbility.Update(gameTime);
         
-        if (keyboardState.IsKeyDown(Keys.LeftShift))
-            MagnetAbility.Activate();
-        
-        if (keyboardState.IsKeyDown(Keys.E) && _previousKeyboardState.IsKeyUp(Keys.E))
-            ScanAbility.Activate();
-        
+        // Abilities (activation is handled by controller via Activate/Deactivate methods)
         if (ScanAbility.IsActive)
         {
             foreach (var hidden in hiddenPlatforms)
@@ -111,31 +105,18 @@ public class Player
             foreach (var hidden in hiddenPlatforms)
                 hidden.IsRevealed = false;
         }
-        
-        float moveDirection = 0;
-        if (keyboardState.IsKeyDown(Keys.A))
-            moveDirection = -1;
-        if (keyboardState.IsKeyDown(Keys.D))
-            moveDirection = 1;
-        
+
+        // Movement is set via controller by setting _inputDirection each frame
         float currentSpeed = Constants.PLAYER_SPEED;
         if (MagnetAbility.IsActive && IsOnMetal)
             currentSpeed *= 0.7f;
-        
-        Velocity = new Vector2(moveDirection * currentSpeed, Velocity.Y);
-        
-        if (moveDirection > 0) _facingRight = true;
-        if (moveDirection < 0) _facingRight = false;
 
-        if (keyboardState.IsKeyDown(Keys.W) && _previousKeyboardState.IsKeyUp(Keys.W) && 
-            (IsGrounded || (MagnetAbility.IsActive && IsOnMetal)))
-        {
-            Velocity = new Vector2(Velocity.X, Constants.PLAYER_JUMP_FORCE);
-            IsGrounded = false;
-            IsOnMetal = false;
-            _animationState = AnimationState.Jumping;
-            _currentAnimationIndex = 0;
-        }
+        Velocity = new Vector2(_inputDirection * currentSpeed, Velocity.Y);
+
+        if (_inputDirection > 0) _facingRight = true;
+        if (_inputDirection < 0) _facingRight = false;
+
+        // Jumping is triggered by controller via Jump()
         
         if (!(IsOnMetal && MagnetAbility.IsActive))
             Velocity = new Vector2(Velocity.X, Velocity.Y + Constants.GRAVITY * deltaTime);
@@ -239,8 +220,30 @@ public class Player
         }
         
         _wasGrounded = IsGrounded;
-        _previousKeyboardState = keyboardState;
     }
+
+    // Controller-facing API
+    public void MoveLeft() => _inputDirection = -1f;
+    public void MoveRight() => _inputDirection = 1f;
+    public void StopMoving() => _inputDirection = 0f;
+
+    public void Jump()
+    {
+        if (IsGrounded || (MagnetAbility.IsActive && IsOnMetal))
+        {
+            Velocity = new Vector2(Velocity.X, Constants.PLAYER_JUMP_FORCE);
+            IsGrounded = false;
+            IsOnMetal = false;
+            _animationState = AnimationState.Jumping;
+            _currentAnimationIndex = 0;
+        }
+    }
+
+    public void ActivateMagnet() => MagnetAbility.Activate();
+    public void DeactivateMagnet() => MagnetAbility.Deactivate();
+
+    public void ActivateScan() => ScanAbility.Activate();
+    public void DeactivateScan() => ScanAbility.Deactivate();
 
     private int[] GetCurrentFrames()
     {

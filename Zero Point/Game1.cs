@@ -7,6 +7,7 @@ using ZeroPoint.Managers;
 using ZeroPoint.States;
 using ZeroPoint.UI;
 using ZeroPoint.Utils;
+using ZeroPoint.Controllers;
 using System.Collections.Generic;
 
 namespace ZeroPoint;
@@ -24,6 +25,7 @@ public class Game1 : Game
     private List<(Texture2D texture, float speed)> _backgroundLayers;
 
     private Player _player;
+    private PlayerController _playerController;
     private Camera _camera;
     private LevelManager _levelManager;
 
@@ -102,6 +104,7 @@ public class Game1 : Game
         _player = new Player(
             _levelManager.CurrentLevel.PlayerStartPosition
         );
+        _playerController = new PlayerController();
         
         // Observer Pattern: Subscribe to events
         _player.PlayerDied += OnPlayerDied;
@@ -222,7 +225,9 @@ public class Game1 : Game
 
     private void UpdatePlaying(GameTime gameTime, KeyboardState keyboardState)
     {
-        _player.Update(gameTime, keyboardState,
+        // Handle input via controller
+        _playerController.Update(_player, keyboardState);
+        _player.Update(gameTime,
             _levelManager.CurrentLevel.MetalSurfaces,
             _levelManager.CurrentLevel.HiddenPlatforms);
 
