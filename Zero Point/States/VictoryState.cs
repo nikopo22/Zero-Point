@@ -22,6 +22,7 @@ public class VictoryState
     private readonly Color _overlayColor;
     private readonly Rectangle _menuRectangle;
     private MouseState _previousMouseState;
+    private int _activeCompletedIndex = -1;
 
     public VictoryState(GraphicsDevice graphicsDevice, SpriteFont font)
     {
@@ -47,18 +48,53 @@ public class VictoryState
         _previousMouseState = Mouse.GetState();
     }
 
-    public void Update(out bool continueClicked, out bool retryClicked, out bool menuClicked)
+    public void Update(int completedLevelIndex, out bool continueClicked, out bool retryClicked, out bool menuClicked)
     {
         MouseState current = Mouse.GetState();
 
-        foreach (Button button in _buttons)
+        // Recreate/relayout buttons when the completed level index changes
+        if (completedLevelIndex != _activeCompletedIndex)
         {
-            button.Update(current);
+            _activeCompletedIndex = completedLevelIndex;
+            int centerX = ScreenWidth / 2 - ButtonWidth / 2;
+            int startY = 320;
+
+            if (completedLevelIndex == 3)
+            {
+                // Last level: show two buttons (start over and main menu)
+                _buttons[0] = new Button(new Rectangle(centerX, startY, ButtonWidth, ButtonHeight), "НАЧАТЬ СНАЧАЛА", _font);
+                _buttons[1] = new Button(new Rectangle(centerX, startY + ButtonSpacing, ButtonWidth, ButtonHeight), "ГЛАВНОЕ МЕНЮ", _font);
+                // hide/unused slot
+                _buttons[2] = new Button(new Rectangle(-500, -500, 0, 0), "", _font);
+            }
+            else
+            {
+                // Default layout with three options
+                _buttons[0] = new Button(new Rectangle(centerX, startY, ButtonWidth, ButtonHeight), "ПРОДОЛЖИТЬ", _font);
+                _buttons[1] = new Button(new Rectangle(centerX, startY + ButtonSpacing, ButtonWidth, ButtonHeight), "ПОВТОРИТЬ", _font);
+                _buttons[2] = new Button(new Rectangle(centerX, startY + ButtonSpacing * 2, ButtonWidth, ButtonHeight), "ГЛАВНОЕ МЕНЮ", _font);
+            }
         }
 
-        continueClicked = _buttons[0].WasReleased(current, _previousMouseState);
-        retryClicked = _buttons[1].WasReleased(current, _previousMouseState);
-        menuClicked = _buttons[2].WasReleased(current, _previousMouseState);
+        foreach (Button button in _buttons)
+        {
+            if (button != null)
+                button.Update(current);
+        }
+
+        if (completedLevelIndex == 3)
+        {
+            // For last level: continueClicked not used, retryClicked -> start over, menuClicked -> menu
+            continueClicked = false;
+            retryClicked = _buttons[0].WasReleased(current, _previousMouseState);
+            menuClicked = _buttons[1].WasReleased(current, _previousMouseState);
+        }
+        else
+        {
+            continueClicked = _buttons[0].WasReleased(current, _previousMouseState);
+            retryClicked = _buttons[1].WasReleased(current, _previousMouseState);
+            menuClicked = _buttons[2].WasReleased(current, _previousMouseState);
+        }
 
         _previousMouseState = current;
     }
@@ -86,14 +122,20 @@ public class VictoryState
 
     private void DrawText(SpriteBatch spriteBatch, int completedLevelIndex)
     {
-        string title = $"Уровень {completedLevelIndex} пройден!";
+        string title;
+        if (completedLevelIndex == 3)
+            title = "Победа!";
+        else
+            title = $"Уровень {completedLevelIndex} пройден!";
         Vector2 titleSize = _font.MeasureString(title);
         Vector2 titlePosition = new Vector2(ScreenWidth / 2 - titleSize.X / 2, _menuRectangle.Y + 40);
         spriteBatch.DrawString(_font, title, titlePosition, Color.LightGreen);
-
-        string subtitle = "Вы можете продолжить или вернуться в меню";
-        Vector2 subtitleSize = _font.MeasureString(subtitle);
-        Vector2 subtitlePosition = new Vector2(ScreenWidth / 2 - subtitleSize.X / 2, _menuRectangle.Y + 110);
-        spriteBatch.DrawString(_font, subtitle, subtitlePosition, Color.White);
+        if (completedLevelIndex != 3)
+        {
+            string subtitle = "Вы можете продолжить или вернуться в меню";
+            Vector2 subtitleSize = _font.MeasureString(subtitle);
+            Vector2 subtitlePosition = new Vector2(ScreenWidth / 2 - subtitleSize.X / 2, _menuRectangle.Y + 110);
+            spriteBatch.DrawString(_font, subtitle, subtitlePosition, Color.White);
+        }
     }
 }

@@ -51,4 +51,10 @@ public class LevelManager
     {
         LoadLevel();
     }
+
+    public void StartFirstLevel()
+    {
+        currentIndex = 1;
+        LoadLevel();
+    }
 }

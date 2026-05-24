@@ -158,7 +158,7 @@ public class Game1 : Game
                 break;
 
             case GameState.Victory:
-                _victoryState.Update(out bool continueClicked, out bool retryClicked, out bool victoryMenuClicked);
+                _victoryState.Update(_lastCompletedLevelIndex, out bool continueClicked, out bool retryClicked, out bool victoryMenuClicked);
                 if (continueClicked)
                 {
                     _levelManager.NextLevel();
@@ -167,7 +167,14 @@ public class Game1 : Game
                 }
                 if (retryClicked)
                 {
-                    _levelManager.ReloadLevel();
+                    if (_lastCompletedLevelIndex == 3)
+                    {
+                        _levelManager.StartFirstLevel();
+                    }
+                    else
+                    {
+                        _levelManager.ReloadLevel();
+                    }
                     _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
                     _currentState = GameState.Playing;
                 }
