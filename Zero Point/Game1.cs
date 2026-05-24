@@ -74,7 +74,6 @@ public class Game1 : Game
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
 
-        // Правильный путь к текстуре
         Texture2D playerTexture = Content.Load<Texture2D>("Sprites/OrangeRobot_SpriteSheet");
         System.Diagnostics.Debug.WriteLine($"Размер текстуры: {playerTexture.Width} x {playerTexture.Height}");
 
@@ -106,7 +105,6 @@ public class Game1 : Game
         );
         _playerController = new PlayerController();
         
-        // Observer Pattern: Subscribe to events
         _player.HealthChanged += OnHealthChanged;
         _player.PlayerDied += OnPlayerDied;
         _levelManager.LevelCompleted += OnLevelCompleted;
@@ -226,7 +224,6 @@ public class Game1 : Game
 
     private void UpdatePlaying(GameTime gameTime, KeyboardState keyboardState)
     {
-        // Handle input via controller
         _playerController.Update(_player, keyboardState);
         _player.Update(gameTime,
             _levelManager.CurrentLevel.MetalSurfaces,
@@ -238,11 +235,9 @@ public class Game1 : Game
             _levelManager.CurrentLevel.HiddenPlatforms,
             _levelManager.CurrentLevel.InvisibleWalls);
 
-        // Observer Pattern: Raise TakeDamage instead of directly resetting player
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
             _player.TakeDamage();
 
-        // Observer Pattern: Raise LevelCompleted event
         if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
         {
             _lastCompletedLevelIndex = _levelManager.CurrentLevelIndex;
@@ -362,28 +357,21 @@ public class Game1 : Game
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
         _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture, _portalSpriteSheet, _portalFrame);
-        // draw player via renderer
         ZeroPoint.Renderers.PlayerRenderer.Draw(_spriteBatch, _player, _playerSpriteSheet);
 
         _spriteBatch.End();
     }
     
-    // Observer Pattern: Event handlers
-    
-    /// <summary>Handles HealthChanged event: can update HUD with new health value.</summary>
     private void OnHealthChanged(int health)
     {
-        // TODO: Update HUD or UI elements with new health value if needed
         System.Diagnostics.Debug.WriteLine($"Player health changed to: {health}");
     }
     
-    /// <summary>Handles PlayerDied event: reset player to respawn position.</summary>
     private void OnPlayerDied()
     {
         _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
     }
     
-    /// <summary>Handles LevelCompleted event: transition to victory state.</summary>
     private void OnLevelCompleted()
     {
         _currentState = GameState.Victory;
