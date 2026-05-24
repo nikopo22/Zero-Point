@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Content;
+﻿#nullable enable
+using Microsoft.Xna.Framework.Content;
 using ZeroPoint.Levels;
 using System;
 
@@ -10,7 +11,7 @@ public class LevelManager
     /// <summary>Raised when the current level is completed.</summary>
     public event Action? LevelCompleted;
 
-    public Level1 CurrentLevel { get; private set; }
+    public Level1 CurrentLevel { get; private set; } = null!;
     private ContentManager contentManager;
     private int currentIndex = 1;
 

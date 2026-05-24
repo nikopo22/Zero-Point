@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ZeroPoint.Abilities;
@@ -12,10 +13,10 @@ public class Player
 {
     // Observer Pattern Events
     /// <summary>Raised when player's health changes. Parameter is new health value.</summary>
-    public event Action<int> HealthChanged;
+    public event Action<int>? HealthChanged;
     
     /// <summary>Raised when player dies (health reaches 0).</summary>
-    public event Action PlayerDied;
+    public event Action? PlayerDied;
 
     public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
