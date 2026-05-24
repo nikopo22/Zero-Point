@@ -19,9 +19,9 @@ public class Player
     public MagnetAbility MagnetAbility { get; private set; }
     public ScanAbility ScanAbility { get; private set; }
     
-    private SpriteSheet _spriteSheet;
     private bool _facingRight = true;
-    private const float _drawScale = 2.0f;
+    public bool FacingRight { get => _facingRight; private set => _facingRight = value; }
+    public float DrawScale { get; private set; } = 2.0f;
     
     private int[] _idleFrames = { 0, 1, 2, 3, 4 };
     private int[] _walkFrames = { 5, 6, 7, 8, 9, 10 };
@@ -29,6 +29,7 @@ public class Player
     private int[] _landFrames = { 16, 17, 18 };
     
     private int _currentFrame;
+    public int CurrentFrame { get => _currentFrame; private set => _currentFrame = value; }
     private int _currentAnimationIndex;
     private double _animationTimer;
     private double _animationSpeed = 0.08;
@@ -45,13 +46,13 @@ public class Player
     private Color magnetColor;
     private KeyboardState _previousKeyboardState;
     
-    public Player(Vector2 startPosition, SpriteSheet spriteSheet)
+    public Player(Vector2 startPosition)
     {
         Position = startPosition;
         Velocity = Vector2.Zero;
         IsGrounded = false;
         IsOnMetal = false;
-        _spriteSheet = spriteSheet;
+        // SpriteSheet is removed from model; rendering is handled by PlayerRenderer
         
         normalColor = Color.White;
         magnetColor = new Color(100, 150, 255);
@@ -61,6 +62,7 @@ public class Player
         
         _animationState = AnimationState.Idle;
         _currentFrame = _idleFrames[0];
+        CurrentFrame = _currentFrame;
         _currentAnimationIndex = 0;
         _wasGrounded = false;
         _justLanded = false;
@@ -190,6 +192,7 @@ public class Player
             }
             
             _currentFrame = currentFrames[_currentAnimationIndex];
+            CurrentFrame = _currentFrame;
         }
 
         IsOnMetal = false;
@@ -241,27 +244,7 @@ public class Player
         };
     }
     
-    public void Draw(SpriteBatch spriteBatch)
-    {
-        SpriteEffects effect = _facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-        Color drawColor = MagnetAbility.IsActive ? magnetColor : normalColor;
-
-        int cropTop = 6; 
-
-        Rectangle src = _spriteSheet.GetSourceRectangle(_currentFrame);
-        src.Y += cropTop;
-        src.Height = Math.Max(1, src.Height - cropTop);
-
-        float destW = src.Width * _drawScale;
-        float destH = src.Height * _drawScale;
-
-        float drawX = Position.X - (destW - Constants.PLAYER_WIDTH) / 2f;
-        float drawY = Position.Y - (destH - Constants.PLAYER_HEIGHT);
-
-        var destRect = new Rectangle((int)Math.Round(drawX), (int)Math.Round(drawY), (int)Math.Round(destW), (int)Math.Round(destH));
-
-        spriteBatch.Draw(_spriteSheet.Texture, destRect, src, drawColor, 0f, Vector2.Zero, effect, 0f);
-    }
+    // Rendering removed from model; use PlayerRenderer to draw.
     
     public void Reset(Vector2 respawnPosition)
     {

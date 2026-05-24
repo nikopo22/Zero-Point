@@ -100,8 +100,7 @@ public class Game1 : Game
             (Content.Load<Texture2D>("Backgrounds/5"), 0.75f),
         };
         _player = new Player(
-            _levelManager.CurrentLevel.PlayerStartPosition,
-            _playerSpriteSheet
+            _levelManager.CurrentLevel.PlayerStartPosition
         );
     }
 
@@ -351,7 +350,8 @@ public class Game1 : Game
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
         _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture, _portalSpriteSheet, _portalFrame);
-        _player.Draw(_spriteBatch);
+        // draw player via renderer
+        ZeroPoint.Renderers.PlayerRenderer.Draw(_spriteBatch, _player, _playerSpriteSheet);
 
         _spriteBatch.End();
     }   

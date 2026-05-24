@@ -12,9 +12,5 @@ public class Spike
         Bounds = new Rectangle(x, y, 32, 32);
     }
 
-    public void Draw(SpriteBatch spriteBatch, Texture2D spikeTexture)
-    {
-        if (spikeTexture != null)
-            spriteBatch.Draw(spikeTexture, Bounds, Color.White);
-    }
+    // Rendering moved to LevelRenderer
 }
