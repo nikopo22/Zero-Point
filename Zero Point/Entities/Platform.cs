@@ -21,7 +21,6 @@ public class Platform
         if (platformTexture == null)
             return;
 
-        // If platform is taller than wide, treat as vertical: use fixed tile height
         if (Bounds.Height > Bounds.Width)
         {
             int tileHeight = Constants.PLATFORM_HEIGHT;

@@ -198,8 +198,6 @@ public static class PrebuiltLevels
             new Spike(4160, 655),
             new Spike(1300, 295),
             new Spike(1340, 295),
-            
-
         };
 
         var walls = new List<InvisibleWall>()

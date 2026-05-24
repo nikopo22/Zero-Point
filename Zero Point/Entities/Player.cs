@@ -11,22 +11,18 @@ namespace ZeroPoint.Entities;
 
 public class Player
 {
-    // === ОСНОВНЫЕ СВОЙСТВА ===
     public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
     public bool IsGrounded { get; set; }
     public bool IsOnMetal { get; set; }
     
-    //способки
     public MagnetAbility MagnetAbility { get; private set; }
     public ScanAbility ScanAbility { get; private set; }
     
-    // анимация
     private SpriteSheet _spriteSheet;
     private bool _facingRight = true;
     private const float _drawScale = 2.0f;
     
-    // индексы кадров
     private int[] _idleFrames = { 0, 1, 2, 3, 4 };
     private int[] _walkFrames = { 5, 6, 7, 8, 9, 10 };
     private int[] _jumpFrames = { 11, 12, 13, 14, 15 };
@@ -37,13 +33,11 @@ public class Player
     private double _animationTimer;
     private double _animationSpeed = 0.08;
     
-    // состояние
     private enum AnimationState { Idle, Walking, Jumping, Landing }
     private AnimationState _animationState;
     private bool _wasGrounded;
     private bool _justLanded;
     
-    // коллизии
     public Rectangle Bounds => new Rectangle((int)Position.X, (int)Position.Y, Constants.PLAYER_WIDTH, Constants.PLAYER_HEIGHT);
     public Rectangle PreviousBounds { get; private set; }
     
@@ -79,18 +73,15 @@ public class Player
         PreviousBounds = Bounds;
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
         
-        // обновление способностей
         MagnetAbility.Update(gameTime);
         ScanAbility.Update(gameTime);
         
-        // активация способностей по клавишам
         if (keyboardState.IsKeyDown(Keys.LeftShift))
             MagnetAbility.Activate();
         
         if (keyboardState.IsKeyDown(Keys.E) && _previousKeyboardState.IsKeyUp(Keys.E))
             ScanAbility.Activate();
         
-        // сканирование 
         if (ScanAbility.IsActive)
         {
             foreach (var hidden in hiddenPlatforms)
@@ -109,7 +100,6 @@ public class Player
                 hidden.IsRevealed = false;
         }
         
-        // движение
         float moveDirection = 0;
         if (keyboardState.IsKeyDown(Keys.A))
             moveDirection = -1;
@@ -124,8 +114,7 @@ public class Player
         
         if (moveDirection > 0) _facingRight = true;
         if (moveDirection < 0) _facingRight = false;
-        
-        // прыжок
+
         if (keyboardState.IsKeyDown(Keys.W) && _previousKeyboardState.IsKeyUp(Keys.W) && 
             (IsGrounded || (MagnetAbility.IsActive && IsOnMetal)))
         {
@@ -136,21 +125,18 @@ public class Player
             _currentAnimationIndex = 0;
         }
         
-        // гравитация
         if (!(IsOnMetal && MagnetAbility.IsActive))
             Velocity = new Vector2(Velocity.X, Velocity.Y + Constants.GRAVITY * deltaTime);
         
         Position += Velocity * deltaTime;
-        
-        // проверка на приземление
+
         _justLanded = !IsGrounded && _wasGrounded;
         if (_justLanded)
         {
             _animationState = AnimationState.Landing;
             _currentAnimationIndex = 0;
         }
-        
-        //анимка
+ 
         _animationTimer += deltaTime;
         
         if (!_justLanded)
@@ -205,8 +191,7 @@ public class Player
             
             _currentFrame = currentFrames[_currentAnimationIndex];
         }
-        
-        // прилипание к стене
+
         IsOnMetal = false;
         foreach (var metal in metalSurfaces)
         {
@@ -243,8 +228,7 @@ public class Player
         _wasGrounded = IsGrounded;
         _previousKeyboardState = keyboardState;
     }
-    
-    // массив кадров
+
     private int[] GetCurrentFrames()
     {
         return _animationState switch
@@ -257,14 +241,12 @@ public class Player
         };
     }
     
-    // отрисовка
     public void Draw(SpriteBatch spriteBatch)
     {
         SpriteEffects effect = _facingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
         Color drawColor = MagnetAbility.IsActive ? magnetColor : normalColor;
 
-        // Кроп сверху, чтобы убрать лишнюю прозрачную полосу над головой
-        int cropTop = 6; // pixels to cut from top of frame
+        int cropTop = 6; 
 
         Rectangle src = _spriteSheet.GetSourceRectangle(_currentFrame);
         src.Y += cropTop;
@@ -281,7 +263,6 @@ public class Player
         spriteBatch.Draw(_spriteSheet.Texture, destRect, src, drawColor, 0f, Vector2.Zero, effect, 0f);
     }
     
-    // возрожденме
     public void Reset(Vector2 respawnPosition)
     {
         Position = respawnPosition;

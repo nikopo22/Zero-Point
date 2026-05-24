@@ -11,7 +11,6 @@ namespace ZeroPoint.Levels;
 
 public class Level1
 {
-    // объекты
     public List<Platform> Platforms { get; private set; }
     public List<Spike> Spikes { get; private set; }
     public List<MetalSurface> MetalSurfaces { get; private set; }
@@ -20,11 +19,6 @@ public class Level1
 
     public Vector2 PlayerStartPosition { get; private set; }
     public Rectangle ExitDoor { get; private set; }
-
-    // текстуры
-    private Texture2D tileset;
-    private Texture2D midBackground;
-    private Texture2D farBackground;
 
     private const int TILE_SIZE = 32;
 
@@ -38,13 +32,6 @@ public class Level1
 
         PlayerStartPosition = new Vector2(100, 500);
         LoadDefaultLevel();
-    }
-
-    public void LoadTextures(Texture2D tilesetTexture, Texture2D midBg, Texture2D farBg)
-    {
-        tileset = tilesetTexture;
-        midBackground = midBg;
-        farBackground = farBg;
     }
 
 
@@ -63,69 +50,42 @@ public class Level1
 
     private void LoadDefaultLevel()
     {
-        // невидимые стены
         InvisibleWalls.Add(new InvisibleWall(0, 0, 50, 800));
         InvisibleWalls.Add(new InvisibleWall(1950, 0, 50, 800));
 
-        // пол
         Platforms.Add(new Platform(0, 700, 2000, 20));
-        // стартовая платформа
         Platforms.Add(new Platform(100, 550, 100, 20));
-        // платформа для прыжка
         Platforms.Add(new Platform(300, 500, 80, 20));
-        // платформа перед выходом
         Platforms.Add(new Platform(750, 550, 100, 20));
 
-        //метал поверх
-        // стена слева
         MetalSurfaces.Add(new MetalSurface(50, 400, 40, 150));
-        // участок пола
         MetalSurfaces.Add(new MetalSurface(300, 630, 80, 20));
-        // стена для прыжка с магнитом
         MetalSurfaces.Add(new MetalSurface(700, 450, 40, 100));
-        // потолок для магнита
         MetalSurfaces.Add(new MetalSurface(500, 100, 100, 20));
 
-        // скрытые платформы
         HiddenPlatforms.Add(new HiddenPlatform(600, 400, 80, 20));
         HiddenPlatforms.Add(new HiddenPlatform(800, 520, 60, 20));
 
-        //шипи
         Spikes.Add(new Spike(480, 550));
         Spikes.Add(new Spike(512, 550));
 
-        //выход
         ExitDoor = new Rectangle(850, 600, 40, 50);
     }
 
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture, SpriteSheet portalSpriteSheet, int portalFrame)
     {
-        // рисуем платформы с текстурами
-        if (tileset != null)
-        {
-            foreach (var platform in Platforms)
-                DrawTiledPlatform(spriteBatch, platform.Bounds, 4);
+        foreach (var platform in Platforms)
+            platform.Draw(spriteBatch, blockTexture);
 
-            foreach (var metal in MetalSurfaces)
-                DrawTiledPlatform(spriteBatch, metal.Bounds, 3);
-        }
-        else
-        {
-            foreach (var platform in Platforms)
-                platform.Draw(spriteBatch, blockTexture);
+        foreach (var metal in MetalSurfaces)
+            metal.Draw(spriteBatch, blockTexture);
 
-            foreach (var metal in MetalSurfaces)
-                metal.Draw(spriteBatch, blockTexture);
-        }
-
-        // рисуем скрытые платформы и шипы
         foreach (var hidden in HiddenPlatforms)
             hidden.Draw(spriteBatch, blockTexture);
 
         foreach (var spike in Spikes)
             spike.Draw(spriteBatch, spikeTexture);
 
-        // рисуем выход
         if (portalSpriteSheet != null)
         {
             int portalWidth = portalSpriteSheet.FrameWidth / 5;
@@ -143,29 +103,5 @@ public class Level1
             spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
         }
     }
-
-    private void DrawTiledPlatform(SpriteBatch spriteBatch, Rectangle bounds, int tileIndex)
-    {
-        if (tileset == null) return;
-
-        int tilesetsPerRow = tileset.Width / TILE_SIZE;
-        int tileX = (tileIndex % tilesetsPerRow) * TILE_SIZE;
-        int tileY = (tileIndex / tilesetsPerRow) * TILE_SIZE;
-        var sourceRect = new Rectangle(tileX, tileY, TILE_SIZE, TILE_SIZE);
-
-        // заполняем платформу повторяющимися тайлами
-        for (int x = bounds.X; x < bounds.Right; x += TILE_SIZE)
-        {
-            for (int y = bounds.Y; y < bounds.Bottom; y += TILE_SIZE)
-            {
-                int width = System.Math.Min(TILE_SIZE, bounds.Right - x);
-                int height = System.Math.Min(TILE_SIZE, bounds.Bottom - y);
-                
-                var destRect = new Rectangle(x, y, width, height);
-                spriteBatch.Draw(tileset, destRect, sourceRect, Color.White);
-            }
-        }
-    }
-
 
 }

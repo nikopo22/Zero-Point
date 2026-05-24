@@ -7,14 +7,9 @@ namespace ZeroPoint.Core;
 
 public class Camera
 {
-    //матрица определяет сдвиг всего изображения на экране
     public Matrix Transform { get; private set; }
-
-    //текущая позиция камеры 
     private Vector2 position;
     public Vector2 CameraPosition => position;
-
-    // следит за игроком, центрируя его на экране
     public void Follow(Player player, List<InvisibleWall> invisibleWalls = null)
     {
         position.X = player.Position.X + Constants.PLAYER_WIDTH / 2 - Constants.SCREEN_WIDTH / 2;
@@ -23,7 +18,6 @@ public class Camera
         position.X = MathHelper.Clamp(position.X, 0, Constants.LEVEL_WIDTH - Constants.SCREEN_WIDTH);
         position.Y = MathHelper.Clamp(position.Y, 0, Constants.LEVEL_HEIGHT - Constants.SCREEN_HEIGHT);
 
-        // Проверяем столкновение с невидимыми стенами
         if (invisibleWalls != null)
         {
             AdjustCameraForWalls(invisibleWalls);
@@ -32,7 +26,6 @@ public class Camera
         Transform = Matrix.CreateTranslation(new Vector3(-position, 0));
     }
 
-    // Корректирует позицию камеры при столкновении с невидимыми стенами
     private void AdjustCameraForWalls(List<InvisibleWall> invisibleWalls)
     {
         Rectangle cameraViewport = new Rectangle((int)position.X, (int)position.Y, Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT);
@@ -42,18 +35,15 @@ public class Camera
             if (!cameraViewport.Intersects(wall.Bounds))
                 continue;
 
-            // Стена слева (толкает камеру вправо)
             if (wall.Bounds.Right <= cameraViewport.Right && wall.Bounds.Left < cameraViewport.Left + Constants.SCREEN_WIDTH / 2)
             {
                 position.X = wall.Bounds.Right;
             }
-            // Стена справа (толкает камеру влево)
             else if (wall.Bounds.Left >= cameraViewport.Left && wall.Bounds.Right > cameraViewport.Right - Constants.SCREEN_WIDTH / 2)
             {
                 position.X = wall.Bounds.Left - Constants.SCREEN_WIDTH;
             }
 
-            // Убедимся что остаёмся в границах уровня
             position.X = MathHelper.Clamp(position.X, 0, Constants.LEVEL_WIDTH - Constants.SCREEN_WIDTH);
         }
     }

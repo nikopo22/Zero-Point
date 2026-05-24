@@ -326,7 +326,6 @@ public class Game1 : Game
                 new Rectangle((int)x, 0, drawWidth, drawHeight),
                 Color.White);
 
-            // второй фон для бесшовности
             _spriteBatch.Draw(
                 layer.texture,
                 new Rectangle((int)x + drawWidth, 0, drawWidth, drawHeight),

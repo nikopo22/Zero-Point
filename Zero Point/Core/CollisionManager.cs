@@ -6,37 +6,30 @@ namespace ZeroPoint.Core;
 
 public static class CollisionManager
 {
-    //проверяет, пересекаются ли два прямоугольника
     public static bool CheckCollision(Rectangle rect1, Rectangle rect2)
     {
         return rect1.Intersects(rect2); 
     }
 
-    //столкновения игрока с платформами, металлическими поверхностями и скрытыми платформами
     public static void HandleCollisions(Player player, List<Platform> platforms, List<MetalSurface> metalSurfaces, List<HiddenPlatform> hiddenPlatforms = null, List<InvisibleWall> invisibleWalls = null)
     {
         player.IsGrounded = false;
 
-        // Проверяем невидимые стены
         if (invisibleWalls != null)
         {
             CheckInvisibleWallCollisions(player, invisibleWalls);
         }
 
-        // Проверяем обычные платформы
         CheckPlatformCollisions(player, platforms);
         
-        // Проверяем металлические поверхности
         CheckMetalSurfaceCollisions(player, metalSurfaces);
 
-        // Проверяем скрытые платформы только когда они видимы
         if (hiddenPlatforms != null)
         {
             CheckHiddenPlatformCollisions(player, hiddenPlatforms);
         }
     }
 
-    //столкновения игрока с платформами
     private static void CheckPlatformCollisions(Player player, List<Platform> platforms)
     {
         foreach (var platform in platforms)
@@ -84,23 +77,18 @@ public static class CollisionManager
         }
     }
 
-    /// <summary>
-    /// Решает коллизию между игроком и поверхностью
-    /// </summary>
     private static void ResolveCollision(Player player, Rectangle platformBounds)
-    {
-        //приземление        
+    {       
         if (player.Velocity.Y > 0 && player.PreviousBounds.Bottom <= platformBounds.Top + 5)
         {
             player.Position = new Vector2(
                 player.Position.X,
                 platformBounds.Top - player.Bounds.Height
             );
-            //останавливаем падение
             player.Velocity = new Vector2(player.Velocity.X, 0);
-            player.IsGrounded = true;      // игрок на земле
+            player.IsGrounded = true;     
         }
-        //снизу
+
         else if (player.Velocity.Y < 0 && player.PreviousBounds.Top >= platformBounds.Bottom - 5)
         {
             player.Position = new Vector2(
@@ -109,10 +97,10 @@ public static class CollisionManager
             );
             player.Velocity = new Vector2(player.Velocity.X, 0);
         }
-        //влево вправо
+
         else
         {
-            //с левой стороны
+  
             if (player.PreviousBounds.Right <= platformBounds.Left + 5)
             {
                 player.Position = new Vector2(
@@ -120,7 +108,7 @@ public static class CollisionManager
                     player.Position.Y
                 );
             }
-            //с правой стороны
+  
             else if (player.PreviousBounds.Left >= platformBounds.Right - 5)
             {
                 player.Position = new Vector2(
@@ -131,7 +119,6 @@ public static class CollisionManager
         }
     }
 
-    //коснулся ли игрок шипа
     public static bool CheckSpikeCollision(Player player, List<Spike> spikes)
     {
         foreach (var spike in spikes)

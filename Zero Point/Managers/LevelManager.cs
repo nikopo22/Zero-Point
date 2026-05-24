@@ -17,11 +17,9 @@ public class LevelManager
 
     private void LoadLevel()
     {
-        // 1 — простой кодовый уровень, 2 — medium, 3 — hard
         if (currentIndex == 1)
         {
             CurrentLevel = new Level1();
-            // Применяем заранее сгенерированный кодовый уровень (easy)
             PrebuiltLevels.ApplyEasyLevel(CurrentLevel);
         }
         else if (currentIndex == 2)
@@ -36,7 +34,6 @@ public class LevelManager
         }
         else
         {
-            // При превышении — возвращаемся к первому уровню
             currentIndex = 1;
             LoadLevel();
         }
