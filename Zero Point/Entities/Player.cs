@@ -11,6 +11,13 @@ namespace ZeroPoint.Entities;
 
 public class Player
 {
+    // Observer Pattern Events
+    /// <summary>Raised when player's health changes. Parameter is new health value.</summary>
+    public event Action<int>? HealthChanged;
+    
+    /// <summary>Raised when player dies (health reaches 0).</summary>
+    public event Action? PlayerDied;
+
     public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
     public bool IsGrounded { get; set; }
@@ -22,6 +29,9 @@ public class Player
     private bool _facingRight = true;
     public bool FacingRight { get => _facingRight; private set => _facingRight = value; }
     public float DrawScale { get; private set; } = 2.0f;
+    
+    private int _health = 1;
+    public int Health { get => _health; private set => _health = value; }
     
     private int[] _idleFrames = { 0, 1, 2, 3, 4 };
     private int[] _walkFrames = { 5, 6, 7, 8, 9, 10 };
@@ -259,5 +269,30 @@ public class Player
         _currentAnimationIndex = 0;
         _wasGrounded = false;
         _justLanded = false;
+        
+        // Restore health when respawning
+        Health = 1;
+        HealthChanged?.Invoke(Health);
+    }
+    
+    /// <summary>Observer Pattern: Reduce health by 1 and raise HealthChanged event.</summary>
+    public void TakeDamage()
+    {
+        if (Health > 0)
+        {
+            Health--;
+            HealthChanged?.Invoke(Health);
+            
+            if (Health <= 0)
+            {
+                Die();
+            }
+        }
+    }
+    
+    /// <summary>Observer Pattern: Raise PlayerDied event.</summary>
+    private void Die()
+    {
+        PlayerDied?.Invoke();
     }
 }

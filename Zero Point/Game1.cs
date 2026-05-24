@@ -102,6 +102,10 @@ public class Game1 : Game
         _player = new Player(
             _levelManager.CurrentLevel.PlayerStartPosition
         );
+        
+        // Observer Pattern: Subscribe to events
+        _player.PlayerDied += OnPlayerDied;
+        _levelManager.LevelCompleted += OnLevelCompleted;
     }
 
     protected override void Update(GameTime gameTime)
@@ -228,13 +232,15 @@ public class Game1 : Game
             _levelManager.CurrentLevel.HiddenPlatforms,
             _levelManager.CurrentLevel.InvisibleWalls);
 
+        // Observer Pattern: Raise TakeDamage instead of directly resetting player
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
-            _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            _player.TakeDamage();
 
+        // Observer Pattern: Raise LevelCompleted event
         if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
         {
             _lastCompletedLevelIndex = _levelManager.CurrentLevelIndex;
-            _currentState = GameState.Victory;
+            _levelManager.OnLevelCompleted();
             _isHelpVisible = false;
         }
 
@@ -354,5 +360,19 @@ public class Game1 : Game
         ZeroPoint.Renderers.PlayerRenderer.Draw(_spriteBatch, _player, _playerSpriteSheet);
 
         _spriteBatch.End();
-    }   
+    }
+    
+    // Observer Pattern: Event handlers
+    
+    /// <summary>Handles PlayerDied event: reset player to respawn position.</summary>
+    private void OnPlayerDied()
+    {
+        _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+    }
+    
+    /// <summary>Handles LevelCompleted event: transition to victory state.</summary>
+    private void OnLevelCompleted()
+    {
+        _currentState = GameState.Victory;
+    }
 }

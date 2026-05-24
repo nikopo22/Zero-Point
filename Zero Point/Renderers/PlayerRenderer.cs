@@ -6,13 +6,32 @@ namespace ZeroPoint.Renderers
 {
     public static class PlayerRenderer
     {
+        // Observer Pattern: Track player health to change render color
+        private static int _lastKnownHealth = 1;
+        private static Color _healthAwareColor = Color.White;
+
         public static void Draw(SpriteBatch spriteBatch, Player player, Core.SpriteSheet spriteSheet)
         {
             if (player == null || spriteSheet == null)
                 return;
 
+            // Observer Pattern: React to health changes (Health == 0 means dead)
+            if (player.Health != _lastKnownHealth)
+            {
+                _lastKnownHealth = player.Health;
+                
+                // Change render color based on health (dead = red)
+                _healthAwareColor = player.Health <= 0 
+                    ? new Color(255, 0, 0, 200)      // Dead: red
+                    : Color.White;                    // Alive: normal
+            }
+
             SpriteEffects effect = player.FacingRight ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-            Color drawColor = player.MagnetAbility.IsActive ? new Color(100, 150, 255) : Color.White;
+            
+            // Observer Pattern: Use health-aware color
+            Color drawColor = player.MagnetAbility.IsActive 
+                ? new Color(100, 150, 255)  // Magnet: blue
+                : _healthAwareColor;         // Otherwise: health-based color
 
             int cropTop = 6;
 

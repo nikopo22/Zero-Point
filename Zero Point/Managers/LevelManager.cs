@@ -1,10 +1,15 @@
 ﻿using Microsoft.Xna.Framework.Content;
 using ZeroPoint.Levels;
+using System;
 
 namespace ZeroPoint.Managers;
 
 public class LevelManager
 {
+    // Observer Pattern Event
+    /// <summary>Raised when the current level is completed.</summary>
+    public event Action? LevelCompleted;
+
     public Level1 CurrentLevel { get; private set; }
     private ContentManager contentManager;
     private int currentIndex = 1;
@@ -56,5 +61,11 @@ public class LevelManager
     {
         currentIndex = 1;
         LoadLevel();
+    }
+    
+    /// <summary>Observer Pattern: Raise LevelCompleted event.</summary>
+    public void OnLevelCompleted()
+    {
+        LevelCompleted?.Invoke();
     }
 }
