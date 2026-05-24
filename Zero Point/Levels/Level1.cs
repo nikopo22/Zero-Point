@@ -74,34 +74,7 @@ public class Level1
 
     public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture, Texture2D blockTexture, Texture2D spikeTexture, SpriteSheet portalSpriteSheet, int portalFrame)
     {
-        foreach (var platform in Platforms)
-            platform.Draw(spriteBatch, blockTexture);
-
-        foreach (var metal in MetalSurfaces)
-            metal.Draw(spriteBatch, blockTexture);
-
-        foreach (var hidden in HiddenPlatforms)
-            hidden.Draw(spriteBatch, blockTexture);
-
-        foreach (var spike in Spikes)
-            spike.Draw(spriteBatch, spikeTexture);
-
-        if (portalSpriteSheet != null)
-        {
-            int portalWidth = portalSpriteSheet.FrameWidth / 5;
-            int portalHeight = portalSpriteSheet.FrameHeight / 5;
-            var portalDrawRect = new Rectangle(
-                ExitDoor.Center.X - portalWidth / 2,
-                ExitDoor.Bottom - portalHeight,
-                portalWidth,
-                portalHeight);
-
-            portalSpriteSheet.Draw(spriteBatch, portalFrame, portalDrawRect, Color.White);
-        }
-        else
-        {
-            spriteBatch.Draw(pixelTexture, ExitDoor, Color.Purple);
-        }
+        ZeroPoint.Renderers.LevelRenderer.Draw(this, spriteBatch, pixelTexture, blockTexture, spikeTexture, portalSpriteSheet, portalFrame);
     }
 
 }

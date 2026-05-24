@@ -100,9 +100,12 @@ public class Game1 : Game
             (Content.Load<Texture2D>("Backgrounds/5"), 0.75f),
         };
         _player = new Player(
-            _levelManager.CurrentLevel.PlayerStartPosition,
-            _playerSpriteSheet
+            _levelManager.CurrentLevel.PlayerStartPosition
         );
+        
+        // Observer Pattern: Subscribe to events
+        _player.PlayerDied += OnPlayerDied;
+        _levelManager.LevelCompleted += OnLevelCompleted;
     }
 
     protected override void Update(GameTime gameTime)
@@ -158,7 +161,7 @@ public class Game1 : Game
                 break;
 
             case GameState.Victory:
-                _victoryState.Update(out bool continueClicked, out bool retryClicked, out bool victoryMenuClicked);
+                _victoryState.Update(_lastCompletedLevelIndex, out bool continueClicked, out bool retryClicked, out bool victoryMenuClicked);
                 if (continueClicked)
                 {
                     _levelManager.NextLevel();
@@ -167,7 +170,14 @@ public class Game1 : Game
                 }
                 if (retryClicked)
                 {
-                    _levelManager.ReloadLevel();
+                    if (_lastCompletedLevelIndex == 3)
+                    {
+                        _levelManager.StartFirstLevel();
+                    }
+                    else
+                    {
+                        _levelManager.ReloadLevel();
+                    }
                     _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
                     _currentState = GameState.Playing;
                 }
@@ -222,13 +232,15 @@ public class Game1 : Game
             _levelManager.CurrentLevel.HiddenPlatforms,
             _levelManager.CurrentLevel.InvisibleWalls);
 
+        // Observer Pattern: Raise TakeDamage instead of directly resetting player
         if (CollisionManager.CheckSpikeCollision(_player, _levelManager.CurrentLevel.Spikes))
-            _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+            _player.TakeDamage();
 
+        // Observer Pattern: Raise LevelCompleted event
         if (CollisionManager.CheckCollision(_player.Bounds, _levelManager.CurrentLevel.ExitDoor))
         {
             _lastCompletedLevelIndex = _levelManager.CurrentLevelIndex;
-            _currentState = GameState.Victory;
+            _levelManager.OnLevelCompleted();
             _isHelpVisible = false;
         }
 
@@ -344,8 +356,23 @@ public class Game1 : Game
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
 
         _levelManager.CurrentLevel.Draw(_spriteBatch, _pixelTexture, _blockTexture, _spikeTexture, _portalSpriteSheet, _portalFrame);
-        _player.Draw(_spriteBatch);
+        // draw player via renderer
+        ZeroPoint.Renderers.PlayerRenderer.Draw(_spriteBatch, _player, _playerSpriteSheet);
 
         _spriteBatch.End();
-    }   
+    }
+    
+    // Observer Pattern: Event handlers
+    
+    /// <summary>Handles PlayerDied event: reset player to respawn position.</summary>
+    private void OnPlayerDied()
+    {
+        _player.Reset(_levelManager.CurrentLevel.PlayerStartPosition);
+    }
+    
+    /// <summary>Handles LevelCompleted event: transition to victory state.</summary>
+    private void OnLevelCompleted()
+    {
+        _currentState = GameState.Victory;
+    }
 }
