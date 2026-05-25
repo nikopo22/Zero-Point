@@ -16,6 +16,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private RenderTarget2D _screenRenderTarget;
     private Texture2D _pixelTexture;
     private SpriteSheet _playerSpriteSheet;
     private SpriteSheet _portalSpriteSheet;
@@ -70,6 +71,7 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _screenRenderTarget = new RenderTarget2D(GraphicsDevice, Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT);
 
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
         _pixelTexture.SetData(new[] { Color.White });
@@ -114,6 +116,13 @@ public class Game1 : Game
     {
         var keyboardState = Keyboard.GetState();
         var mouseState = Mouse.GetState();
+
+        // Toggle fullscreen on Alt+Enter
+        if (keyboardState.IsKeyDown(Keys.Enter) && _previousKeyboardState.IsKeyUp(Keys.Enter)
+            && (keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt)))
+        {
+            ToggleFullScreen();
+        }
 
         if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
         {
@@ -250,6 +259,7 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        GraphicsDevice.SetRenderTarget(_screenRenderTarget);
         GraphicsDevice.Clear(_currentState == GameState.Menu ? new Color(25, 25, 40) : new Color(50, 50, 60));
 
         if (_currentState == GameState.Menu)
@@ -281,6 +291,12 @@ public class Game1 : Game
                 _spriteBatch.End();
             }
         }
+
+        GraphicsDevice.SetRenderTarget(null);
+        GraphicsDevice.Clear(Color.Black);
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        _spriteBatch.Draw(_screenRenderTarget, GetBackBufferDestinationRectangle(), Color.White);
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
@@ -320,6 +336,12 @@ public class Game1 : Game
         }
     }
 
+    private void ToggleFullScreen()
+    {
+        _graphics.IsFullScreen = !_graphics.IsFullScreen;
+        _graphics.ApplyChanges();
+    }
+
 
     private void DrawParallaxBackground()
     {
@@ -350,8 +372,6 @@ public class Game1 : Game
 
     private void DrawGameplay()
     {
-        GraphicsDevice.Clear(new Color(20, 20, 30));
-
         DrawParallaxBackground();
 
         _spriteBatch.Begin(transformMatrix: _camera.Transform);
@@ -362,6 +382,24 @@ public class Game1 : Game
         _spriteBatch.End();
     }
     
+    private Rectangle GetBackBufferDestinationRectangle()
+    {
+        var viewport = GraphicsDevice.Viewport;
+        float targetAspect = Constants.SCREEN_WIDTH / (float)Constants.SCREEN_HEIGHT;
+        float viewportAspect = viewport.Width / (float)viewport.Height;
+
+        if (viewportAspect > targetAspect)
+        {
+            int width = (int)(viewport.Height * targetAspect);
+            int x = (viewport.Width - width) / 2;
+            return new Rectangle(x, 0, width, viewport.Height);
+        }
+
+        int height = (int)(viewport.Width / targetAspect);
+        int y = (viewport.Height - height) / 2;
+        return new Rectangle(0, y, viewport.Width, height);
+    }
+
     private void OnHealthChanged(int health)
     {
         System.Diagnostics.Debug.WriteLine($"Player health changed to: {health}");
